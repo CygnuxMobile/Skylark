@@ -27,3 +27,31 @@ doc/api/
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Android-specific
+android/.gradle/
+android/local.properties
+android/.kotlin/
+android/app/debug/
+android/app/release/
+android/app/build/
+*.apk
+*.aab
+
+# iOS/macOS
+ios/.test/
+ios/.bin/
+*.ipa
+*.app
+
+# IDE related
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.history
+
+# Misc
+*.log
+.DS_Store
