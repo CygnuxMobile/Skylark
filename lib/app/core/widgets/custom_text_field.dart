@@ -3,6 +3,7 @@ import 'package:skylark/app/core/values/app_colors.dart';
 
 class CustomTextField extends StatelessWidget {
   final TextEditingController? controller;
+  final FocusNode? focusNode;
   final String? hintText;
   final bool obscureText;
   final TextInputType? keyboardType;
@@ -10,6 +11,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final String? Function(String?)? validator;
   final Function(String)? onChanged;
+  final Function(String)? onFieldSubmitted;
   final bool readOnly;
   final bool enabled;
   final bool isLoading;
@@ -18,6 +20,7 @@ class CustomTextField extends StatelessWidget {
   const CustomTextField({
     super.key,
     this.controller,
+    this.focusNode,
     this.hintText,
     this.obscureText = false,
     this.keyboardType,
@@ -25,6 +28,7 @@ class CustomTextField extends StatelessWidget {
     this.suffixIcon,
     this.validator,
     this.onChanged,
+    this.onFieldSubmitted,
     this.readOnly = false,
     this.enabled = true,
     this.isLoading = false,
@@ -47,10 +51,12 @@ class CustomTextField extends StatelessWidget {
       ),
       child: TextFormField(
         controller: controller,
+        focusNode: focusNode,
         obscureText: obscureText,
         keyboardType: keyboardType,
         validator: validator,
         onChanged: onChanged,
+        onFieldSubmitted: onFieldSubmitted,
         readOnly: readOnly,
         enabled: enabled,
         maxLength: maxLength,

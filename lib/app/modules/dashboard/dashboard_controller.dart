@@ -1,4 +1,5 @@
 import 'package:get/get.dart';
+import 'package:skylark/app/core/values/app_constants.dart';
 import 'package:skylark/app/data/models/location_model.dart';
 import 'package:skylark/app/data/models/login_response_model.dart';
 import 'package:skylark/app/data/services/api_service.dart';
@@ -29,7 +30,7 @@ class DashboardController extends GetxController {
     try {
       isLoadingLocations.value = true;
       final userId = userData.value?.userId ?? "";
-      final response = await _apiService.get('Master/GetLocationMasterData', queryParameters: {'UserID': userId});
+      final response = await _apiService.get(AppConstants.getLocationMasterDataUrl, queryParameters: {'UserID': userId});
       
       if (response.statusCode == 200 && response.data != null) {
         List<dynamic> data = [];

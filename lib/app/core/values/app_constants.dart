@@ -1,9 +1,59 @@
 class AppConstants {
   static const String baseUrl = 'http://43.248.56.36:44399/V1/';
+
+  // ==========================================
+  // AUTH MODULE
+  // ==========================================
   static const String loginUrl = 'Authenticate/Login';
-  static const String getEwayBillDetailsUrl = 'Operation/GetEwaybillDetailsFromAPI';
+
+  // ==========================================
+  // MASTER MODULE (COMMON DATA)
+  // ==========================================
+  static const String getLocationMasterDataUrl = 'Master/GetLocationMasterData';
   static const String getCustomerListUrl = 'Master/GetCustomerList';
 
+  // ==========================================
+  // BOOKING MODULE
+  // ==========================================
+  static const String getEwayBillDetailsUrl = 'Operation/GetEwaybillDetailsFromAPI';
+  static const String getPincodeUrl = 'Operation/GetPincode';
+  static const String getFromPincodeDetailsUrl = 'Operation/GetFromPincodeDetails';
+  static const String getToPincodeDetailsUrl = 'Operation/GetToPincodeDetails';
+  static const String getContractFreightUrl = 'Operation/GetContractFreight';
+  static const String getConsigneeUrl = 'Operation/GetConsignee';
+  static const String docketSubmitUrl = 'Operation/DocketSubmit';
+
+  // ==========================================
+  // POD UPLOAD MODULE
+  // ==========================================
+  static const String getPODListUrl = 'Operation/GetPODlist';
+  static const String uploadPODImageUrl = 'Operation/UploadPODImage';
+
+  // ==========================================
+  // STOCK UPDATE MODULE
+  // ==========================================
+  static const String stockUpdateListUrl = 'Operation/StockUpdateList';
+
+  // ==========================================
+  // PRS / DRS (COMMON OPERATION)
+  // ==========================================
+  static const String prsListUrl = 'Operation/PRSList';
+  static const String drsListUrl = 'Operation/DRSUpdateList';
+  static const String getVendorsUrl = 'Operation/GetVendorsFromVendorType';
+  static const String getVehicleNoUrl = 'Operation/GetVehicleNo';
+  static const String getTripsheetNoUrl = 'Operation/GetTripsheetNo';
+  static const String getAvailableDocketUrl = 'Operation/AvalabledocketinPRSDRS';
+  static const String preparePrsUrl = 'Operation/PreparePRS';
+  static const String prepareDrsUrl = 'Operation/PrepareDRS';
+  static const String prsArrivalUrl = 'Operation/PRSArrival';
+  static const String thcArrivalsListUrl = 'Operation/THCArrivalsList';
+  static const String thcArrivalSubmitUrl = 'Operation/THCArrivalSubmit';
+  static const String updateDrsDetailsUrl = 'Operation/UpdateDRSDetails';
+  static const String updateDrsUrl = 'Operation/UpdateDRS';
+
+  // ==========================================
+  // STORAGE KEYS (LOCAL PREFERENCES)
+  // ==========================================
   static const String tokenKey = 'token';
   static const String userDataKey = 'user_data';
   static const String isLoggedKey = 'is_logged_in';

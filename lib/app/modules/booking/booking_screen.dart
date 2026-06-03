@@ -6,6 +6,7 @@ import 'package:skylark/app/core/widgets/custom_text_field.dart';
 import 'package:skylark/app/core/widgets/custom_search_dropdown.dart';
 import 'package:skylark/app/data/models/customer_model.dart';
 import 'package:skylark/app/data/models/location_model.dart';
+import 'package:skylark/app/data/models/pincode_model.dart';
 import 'booking_controller.dart';
 
 class BookingScreen extends GetView<BookingController> {
@@ -19,21 +20,12 @@ class BookingScreen extends GetView<BookingController> {
         backgroundColor: AppColors.primaryBlue,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios_new,
-            color: AppColors.white,
-            size: 20,
-          ),
+          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.white, size: 20),
           onPressed: () => Get.back(),
         ),
         title: const Text(
           'Booking Screen',
-          style: TextStyle(
-            color: AppColors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 18,
-            letterSpacing: 0.5,
-          ),
+          style: TextStyle(color: AppColors.white, fontWeight: FontWeight.bold, fontSize: 18, letterSpacing: 0.5),
         ),
         centerTitle: true,
       ),
@@ -47,15 +39,9 @@ class BookingScreen extends GetView<BookingController> {
               _buildFieldLabel('Cnote NO'),
               CustomTextField(
                 controller: controller.cnoteController,
+                focusNode: controller.cnoteFocus,
                 hintText: 'Enter Cnote Number',
-                prefixIcon: const Icon(
-                  Icons.numbers_rounded,
-                  color: AppColors.primaryBlue,
-                  size: 20,
-                ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Cnote number is required'
-                    : null,
+                prefixIcon: const Icon(Icons.numbers_rounded, color: AppColors.primaryBlue, size: 20),
               ),
               const SizedBox(height: 16),
 
@@ -63,30 +49,16 @@ class BookingScreen extends GetView<BookingController> {
               Obx(
                 () => CustomTextField(
                   controller: controller.ewayBillController,
+                  focusNode: controller.ewayBillFocus,
                   hintText: 'Enter Eway Bill Number',
                   keyboardType: TextInputType.number,
                   maxLength: 12,
                   prefixIcon: controller.isLoadingEwayBill.value
                       ? const Padding(
                           padding: EdgeInsets.all(12.0),
-                          child: SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          ),
+                          child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
                         )
-                      : const Icon(
-                          Icons.receipt_long_rounded,
-                          color: AppColors.primaryBlue,
-                          size: 20,
-                        ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty)
-                      return 'Eway bill is required';
-                    if (value.length != 12)
-                      return 'Eway bill must be 12 digits';
-                    return null;
-                  },
+                      : const Icon(Icons.receipt_long_rounded, color: AppColors.primaryBlue, size: 20),
                 ),
               ),
               const SizedBox(height: 16),
@@ -98,14 +70,13 @@ class BookingScreen extends GetView<BookingController> {
                   children: [
                     CustomSearchDropdown<CustomerModel>(
                       items: controller.customers,
+                      focusNode: controller.customerFocus,
                       hintText: 'Select Customer',
                       isLoading: controller.isLoadingCustomers.value,
                       selectedItem: controller.selectedCustomer.value,
-                      itemAsString: (customer) =>
-                          "${customer.custCode ?? ''} - ${customer.custName ?? ''}",
-                      compareFn: (item, selectedItem) =>
-                          item.custCode == selectedItem.custCode &&
-                          item.custName == selectedItem.custName,
+                      itemAsString: (customer) => "${customer.custCode ?? ''} - ${customer.custName ?? ''}",
+                      compareFn: (item, selectedItem) => item.custCode == selectedItem.custCode && item.custName == selectedItem.custName,
+                      validator: (value) => value == null || value.isEmpty ? 'Customer is required' : null,
                       onSelected: (value) {
                         if (value != null) {
                           controller.selectedCustomer.value = value;
@@ -115,13 +86,7 @@ class BookingScreen extends GetView<BookingController> {
                     if (controller.customerErrorMessage.value.isNotEmpty)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0, left: 4.0),
-                        child: Text(
-                          controller.customerErrorMessage.value,
-                          style: const TextStyle(
-                            color: Colors.red,
-                            fontSize: 12,
-                          ),
-                        ),
+                        child: Text(controller.customerErrorMessage.value, style: const TextStyle(color: Colors.red, fontSize: 12)),
                       ),
                   ],
                 ),
@@ -136,21 +101,19 @@ class BookingScreen extends GetView<BookingController> {
                       children: [
                         _buildFieldLabel('Origin Pin'),
                         Obx(
-                          () => CustomSearchDropdown<LocationModel>(
+                          () => CustomSearchDropdown<PincodeModel>(
                             items: controller.locations,
+                            focusNode: controller.originFocus,
                             hintText: 'Origin',
                             isLoading: controller.isLoadingLocations.value,
+                            isSearching: controller.isLoadingLocations,
                             selectedItem: controller.selectedOrigin.value,
-                            itemAsString: (item) =>
-                                "${item.locCode ?? ''} - ${item.locName ?? ''}",
-                            compareFn: (item, selectedItem) =>
-                                item.locCode == selectedItem.locCode,
-                            onSelected: (value) {
-                              controller.selectedOrigin.value = value;
-                              if (value != null) {
-                                controller.originPinController.text = value.locCode ?? '';
-                              }
-                            },
+                            itemAsString: (item) => item.pincode ?? '',
+                            onSearch: (val) => controller.fetchPincodes(val),
+                            onTap: () => controller.locations.clear(),
+                            compareFn: (item, selectedItem) => item.pincode == selectedItem.pincode,
+                            validator: (value) => value == null || value.isEmpty ? 'Origin required' : null,
+                            onSelected: (value) => controller.onOriginSelected(value),
                           ),
                         ),
                       ],
@@ -163,21 +126,19 @@ class BookingScreen extends GetView<BookingController> {
                       children: [
                         _buildFieldLabel('Dest Pin'),
                         Obx(
-                          () => CustomSearchDropdown<LocationModel>(
+                          () => CustomSearchDropdown<PincodeModel>(
                             items: controller.locations,
+                            focusNode: controller.destFocus,
                             hintText: 'Destination',
                             isLoading: controller.isLoadingLocations.value,
+                            isSearching: controller.isLoadingLocations,
                             selectedItem: controller.selectedDest.value,
-                            itemAsString: (item) =>
-                                "${item.locCode ?? ''} - ${item.locName ?? ''}",
-                            compareFn: (item, selectedItem) =>
-                                item.locCode == selectedItem.locCode,
-                            onSelected: (value) {
-                              controller.selectedDest.value = value;
-                              if (value != null) {
-                                controller.destPinController.text = value.locCode ?? '';
-                              }
-                            },
+                            itemAsString: (item) => item.pincode ?? '',
+                            onSearch: (val) => controller.fetchPincodes(val),
+                            onTap: () => controller.locations.clear(),
+                            compareFn: (item, selectedItem) => item.pincode == selectedItem.pincode,
+                            validator: (value) => value == null || value.isEmpty ? 'Dest required' : null,
+                            onSelected: (value) => controller.onDestSelected(value),
                           ),
                         ),
                       ],
@@ -192,14 +153,8 @@ class BookingScreen extends GetView<BookingController> {
                 controller: controller.consignorController,
                 hintText: 'Consignor Name',
                 enabled: false,
-                prefixIcon: const Icon(
-                  Icons.person_outline_rounded,
-                  color: AppColors.primaryBlue,
-                  size: 20,
-                ),
-                validator: (value) => value == null || value.isEmpty
-                    ? 'Consignor is required'
-                    : null,
+                prefixIcon: const Icon(Icons.person_outline_rounded, color: AppColors.primaryBlue, size: 20),
+                validator: (value) => value == null || value.isEmpty ? 'Consignor is required' : null,
               ),
               const SizedBox(height: 16),
 
@@ -207,13 +162,13 @@ class BookingScreen extends GetView<BookingController> {
               Obx(
                 () => CustomSearchDropdown<CustomerModel>(
                   items: controller.consignees,
+                  focusNode: controller.consigneeFocus,
                   hintText: 'Select Consignee',
                   isLoading: controller.isLoadingConsignees.value,
                   selectedItem: controller.selectedConsignee.value,
-                  itemAsString: (item) =>
-                      "${item.custCode ?? ''} - ${item.custName ?? ''}",
-                  compareFn: (item, selectedItem) =>
-                      item.custCode == selectedItem.custCode,
+                  itemAsString: (item) => "${item.custCode ?? ''} - ${item.custName ?? ''}",
+                  compareFn: (item, selectedItem) => item.custCode == selectedItem.custCode,
+                  validator: (value) => value == null || value.isEmpty ? 'Consignee required' : null,
                   onSelected: (value) {
                     controller.selectedConsignee.value = value;
                     if (value != null) {
@@ -234,12 +189,11 @@ class BookingScreen extends GetView<BookingController> {
                         Obx(
                           () => CustomTextField(
                             controller: controller.pkgsController,
+                            focusNode: controller.pkgsFocus,
                             hintText: '0',
                             keyboardType: TextInputType.number,
                             readOnly: controller.isFieldsReadOnly.value,
-                            validator: (value) => value == null || value.isEmpty
-                                ? 'Required'
-                                : null,
+                            validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                           ),
                         ),
                       ],
@@ -251,14 +205,14 @@ class BookingScreen extends GetView<BookingController> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildFieldLabel('Actual Weight'),
-                        Obx(
-                          () => CustomTextField(
-                            controller: controller.aWeightController,
-                            hintText: '0.00',
-                            readOnly: controller.isFieldsReadOnly.value,
-                            keyboardType: TextInputType.number,
-                          ),
-                        ),
+                        Obx(() => CustomTextField(
+                              controller: controller.aWeightController,
+                              focusNode: controller.aWeightFocus,
+                              hintText: '0.00',
+                              readOnly: controller.isFieldsReadOnly.value,
+                              keyboardType: TextInputType.number,
+                              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
+                            )),
                       ],
                     ),
                   ),
@@ -266,90 +220,84 @@ class BookingScreen extends GetView<BookingController> {
               ),
               const SizedBox(height: 16),
 
-              _buildFieldLabel('Invoice Number'),
-              Obx(
-                () => CustomTextField(
-                  controller: controller.invNoController,
-                  hintText: 'Enter INV No',
-                  readOnly: controller.isFieldsReadOnly.value,
-                  prefixIcon: const Icon(
-                    Icons.description_outlined,
-                    color: AppColors.primaryBlue,
-                    size: 20,
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'INV No is required'
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 16),
-
               _buildFieldLabel('Invoice Value'),
               Obx(
                 () => CustomTextField(
                   controller: controller.invValueController,
+                  focusNode: controller.invValueFocus,
                   hintText: 'Enter INV Value',
                   keyboardType: TextInputType.number,
                   readOnly: controller.isFieldsReadOnly.value,
-                  prefixIcon: const Icon(
-                    Icons.currency_rupee_rounded,
-                    color: AppColors.primaryBlue,
-                    size: 20,
-                  ),
-                  validator: (value) => value == null || value.isEmpty
-                      ? 'Value is required'
-                      : null,
+                  prefixIcon: const Icon(Icons.currency_rupee_rounded, color: AppColors.primaryBlue, size: 20),
+                  validator: (value) => value == null || value.isEmpty ? 'Value is required' : null,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+              _buildFieldLabel('Invoice Number'),
+              Obx(
+                () => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    CustomTextField(
+                      controller: controller.invNoController,
+                      focusNode: controller.invNoFocus,
+                      hintText: 'Enter INV No',
+                      readOnly: controller.isFieldsReadOnly.value,
+                      prefixIcon: controller.isLoadingFreight.value
+                          ? const Padding(
+                              padding: EdgeInsets.all(12.0),
+                              child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
+                            )
+                          : const Icon(Icons.description_outlined, color: AppColors.primaryBlue, size: 20),
+                      validator: (value) => value == null || value.isEmpty ? 'INV No is required' : null,
+                    ),
+                    if (controller.freightErrorMessage.value.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0, left: 4.0),
+                        child: Text(
+                          controller.freightErrorMessage.value,
+                          style: const TextStyle(color: Colors.red, fontSize: 12, fontWeight: FontWeight.w500),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
 
-              Obx(() => Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InkWell(
-                    onTap: () => controller.toggleDimensions(),
-                    borderRadius: BorderRadius.circular(8),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            controller.showDimensions.value 
-                                ? Icons.remove_circle_outline 
-                                : Icons.add_circle_outline,
-                            color: AppColors.primaryBlue,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            controller.showDimensions.value 
-                                ? 'HIDE DIMENSIONS' 
-                                : 'ADD DIMENSIONS',
-                            style: const TextStyle(
-                              color: AppColors.primaryBlue,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                              letterSpacing: 0.5,
+              Obx(
+                () => Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InkWell(
+                      onTap: () => controller.toggleDimensions(),
+                      borderRadius: BorderRadius.circular(8),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(controller.showDimensions.value ? Icons.remove_circle_outline : Icons.add_circle_outline, color: AppColors.primaryBlue, size: 22),
+                            const SizedBox(width: 8),
+                            Text(
+                              controller.showDimensions.value ? 'HIDE DIMENSIONS' : 'ADD DIMENSIONS',
+                              style: const TextStyle(color: AppColors.primaryBlue, fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 0.5),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  if (controller.showDimensions.value) ...[
-                    const SizedBox(height: 16),
-                    _buildDimensionSection(),
+                    if (controller.showDimensions.value) ...[const SizedBox(height: 16), _buildDimensionSection()],
                   ],
-                ],
-              )),
+                ),
+              ),
 
               const SizedBox(height: 32),
 
-              CustomButton(
-                text: 'SUBMIT BOOKING',
+              Obx(() => CustomButton(
+                text: 'SUBMIT BOOKING', 
+                isLoading: controller.isLoadingBooking.value,
                 onPressed: () => controller.submitBooking(),
-              ),
+              )),
               const SizedBox(height: 40),
             ],
           ),
@@ -363,12 +311,7 @@ class BookingScreen extends GetView<BookingController> {
       padding: const EdgeInsets.only(left: 4, bottom: 8),
       child: Text(
         label,
-        style: const TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.bold,
-          color: AppColors.darkBlue,
-          letterSpacing: 0.3,
-        ),
+        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: AppColors.darkBlue, letterSpacing: 0.3),
       ),
     );
   }
@@ -391,16 +334,9 @@ class BookingScreen extends GetView<BookingController> {
     );
   }
 
-  Widget _buildSmallDimField(
-    String label,
-    TextEditingController textController,
-  ) {
+  Widget _buildSmallDimField(String label, TextEditingController textController) {
     return Expanded(
-      child: CustomTextField(
-        controller: textController,
-        hintText: label,
-        keyboardType: TextInputType.number,
-      ),
+      child: CustomTextField(controller: textController, hintText: label, keyboardType: TextInputType.number),
     );
   }
 }

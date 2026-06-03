@@ -3,15 +3,20 @@ import 'package:get/get.dart';
 import 'package:skylark/app/core/values/app_colors.dart';
 import 'package:skylark/app/core/widgets/custom_text_field.dart';
 
-class CustomSearchDropdown<T> extends StatelessWidget {
+class CustomSearchDropdown<T> extends StatefulWidget {
   final List<T> items;
   final String hintText;
   final Function(T?) onSelected;
   final T? selectedItem;
   final bool isLoading;
+  final RxBool? isSearching;
   final String Function(T)? itemAsString;
   final bool Function(T, String)? filterFn;
   final bool Function(T, T)? compareFn;
+  final Function(String)? onSearch;
+  final VoidCallback? onTap;
+  final String? Function(String?)? validator;
+  final FocusNode? focusNode;
 
   const CustomSearchDropdown({
     super.key,
@@ -20,27 +25,68 @@ class CustomSearchDropdown<T> extends StatelessWidget {
     required this.onSelected,
     this.selectedItem,
     this.isLoading = false,
+    this.isSearching,
     this.itemAsString,
     this.filterFn,
     this.compareFn,
+    this.onSearch,
+    this.onTap,
+    this.validator,
+    this.focusNode,
   });
 
   @override
-  Widget build(BuildContext context) {
-    String displayText = "";
-    if (selectedItem != null) {
-      displayText = itemAsString != null ? itemAsString!(selectedItem as T) : selectedItem.toString();
-    }
+  State<CustomSearchDropdown<T>> createState() => _CustomSearchDropdownState<T>();
+}
 
+class _CustomSearchDropdownState<T> extends State<CustomSearchDropdown<T>> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: _getDisplayText(widget.selectedItem));
+  }
+
+  @override
+  void didUpdateWidget(covariant CustomSearchDropdown<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedItem != oldWidget.selectedItem) {
+      Future.microtask(() {
+        if (mounted) {
+          _controller.text = _getDisplayText(widget.selectedItem);
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _getDisplayText(T? item) {
+    if (item == null) return "";
+    return widget.itemAsString != null ? widget.itemAsString!(item) : item.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: isLoading ? null : () => _showBottomSheet(context),
+      onTap: widget.isLoading ? null : () {
+        if (widget.onTap != null) widget.onTap!();
+        _showBottomSheet(context);
+      },
       child: AbsorbPointer(
         child: CustomTextField(
-          controller: TextEditingController(text: displayText),
-          hintText: hintText,
-          isLoading: isLoading,
+          controller: _controller,
+          focusNode: widget.focusNode,
+          hintText: widget.hintText,
+          isLoading: widget.isLoading,
           suffixIcon: const Icon(Icons.arrow_drop_down, color: AppColors.primaryBlue),
-          enabled: !isLoading,
+          enabled: !widget.isLoading,
+          validator: widget.validator,
         ),
       ),
     );
@@ -48,12 +94,14 @@ class CustomSearchDropdown<T> extends StatelessWidget {
 
   void _showBottomSheet(BuildContext context) {
     final searchController = TextEditingController();
-    final filteredItems = RxList<T>(items);
-    final currentSelection = Rxn<T>(selectedItem);
+    final searchText = "".obs;
+    final filteredItems = RxList<T>(widget.items);
+    final currentSelection = Rxn<T>(widget.selectedItem);
 
     Get.bottomSheet(
       Container(
-        height: Get.height * 0.6,
+        height: Get.height * 0.7,
+        padding: EdgeInsets.only(bottom: MediaQuery.of(Get.context!).viewInsets.bottom),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.only(
@@ -84,7 +132,7 @@ class CustomSearchDropdown<T> extends StatelessWidget {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 5),
               child: TextField(
                 controller: searchController,
                 style: const TextStyle(fontSize: 16),
@@ -101,32 +149,79 @@ class CustomSearchDropdown<T> extends StatelessWidget {
                   ),
                 ),
                 onChanged: (val) {
-                  if (val.isEmpty) {
-                    filteredItems.assignAll(items);
+                  searchText.value = val;
+                  if (widget.onSearch != null) {
+                    widget.onSearch!(val);
                   } else {
-                    filteredItems.assignAll(items.where((i) {
-                      final str = itemAsString != null ? itemAsString!(i) : i.toString();
-                      return str.toLowerCase().contains(val.toLowerCase());
-                    }).toList());
+                    if (val.isEmpty) {
+                      filteredItems.assignAll(widget.items);
+                    } else {
+                      filteredItems.assignAll(widget.items.where((i) {
+                        final str = widget.itemAsString != null ? widget.itemAsString!(i) : i.toString();
+                        return str.toLowerCase().contains(val.toLowerCase());
+                      }).toList());
+                    }
                   }
                 },
               ),
             ),
+            widget.isSearching != null 
+              ? Obx(() => widget.isSearching!.value 
+                  ? const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 30),
+                      child: LinearProgressIndicator(
+                        backgroundColor: Colors.transparent,
+                        valueColor: AlwaysStoppedAnimation<Color>(AppColors.primaryBlue),
+                        minHeight: 2,
+                      ),
+                    ) 
+                  : const SizedBox(height: 2))
+              : const SizedBox(height: 2),
+            const SizedBox(height: 5),
             Expanded(
-              child: Obx(
-                () => ListView.separated(
+              child: Obx(() {
+                final currentSearchText = searchText.value;
+                final searching = widget.isSearching?.value ?? false;
+                final displayList = widget.onSearch != null ? widget.items : filteredItems;
+                
+                if (displayList.isEmpty && !searching) {
+                  if (widget.onSearch != null && currentSearchText.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_rounded, size: 50, color: Colors.grey[300]),
+                          const SizedBox(height: 10),
+                          Text(
+                            "Search for pincode here",
+                            style: TextStyle(color: Colors.grey[500], fontSize: 16),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return Center(
+                    child: Text(
+                      currentSearchText.isEmpty ? "No data found" : "No results found for '$currentSearchText'",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    ),
+                  );
+                }
+
+                return ListView.separated(
+                  keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                  itemCount: filteredItems.length,
-                  separatorBuilder: (context, index) => Divider(color: Colors.grey, height: 1),
+                  itemCount: displayList.length,
+                  separatorBuilder: (context, index) => const Divider(color: Colors.grey, height: 0.5),
                   itemBuilder: (context, index) {
-                    final item = filteredItems[index];
-                    final str = itemAsString != null ? itemAsString!(item) : item.toString();
+                    final item = displayList[index];
+                    final str = widget.itemAsString != null ? widget.itemAsString!(item) : item.toString();
                     
                     bool isSelected = false;
                     if (currentSelection.value != null) {
-                      if (compareFn != null) {
+                      if (widget.compareFn != null) {
                         try {
-                          isSelected = compareFn!(item, currentSelection.value as T);
+                          isSelected = widget.compareFn!(item, currentSelection.value as T);
                         } catch (e) {
                           isSelected = false;
                         }
@@ -154,14 +249,14 @@ class CustomSearchDropdown<T> extends StatelessWidget {
                           : null,
                         onTap: () {
                           currentSelection.value = item;
-                          onSelected(item);
-                          Future.delayed(const Duration(milliseconds: 200), () => Get.back());
+                          Get.back(); 
+                          widget.onSelected(item);
                         },
                       ),
                     );
                   },
-                ),
-              ),
+                );
+              }),
             ),
           ],
         ),
