@@ -24,34 +24,49 @@ class DrsScreen extends GetView<DrsController> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildLabel("Vendor Type"),
-            CustomSearchDropdown(
-              items: controller.vendorTypes,
-              hintText: "Select Vendor Type",
-              onSelected: controller.onVendorTypeChanged,
+            Obx(
+              () => CustomSearchDropdown(
+                items: controller.vendorTypes,
+                hintText: "Select Vendor Type",
+                selectedItem: controller.selectedVendorType.value.isEmpty
+                    ? null
+                    : controller.selectedVendorType.value,
+                onSelected: controller.onVendorTypeChanged,
+              ),
             ),
             const SizedBox(height: 15),
 
             _buildLabel("Vehicle No"),
             Obx(() => controller.isOwnVehicle.value
-                ? CustomSearchDropdown(
+                ? CustomSearchDropdown<String>(
                     items: controller.vehicles,
                     hintText: "Select Vehicle No",
-                    onSelected: (val) => controller.vehicleNo.value = val ?? '',
+                    isLoading: controller.isLoadingVehicles.value,
+                    selectedItem: controller.vehicleNo.value.isEmpty
+                        ? null
+                        : controller.vehicleNo.value,
+                    onSelected: (val) => controller.onVehicleNoChanged(val ?? ''),
                   )
                 : CustomTextField(
+                    controller: controller.vehicleNoController,
                     hintText: "Enter Vehicle No",
-                    onChanged: (val) => controller.vehicleNo.value = val,
+                    onChanged: (val) => controller.onVehicleNoChanged(val),
                   )),
             const SizedBox(height: 15),
 
             _buildLabel("TRIPSHEET/ Amount"),
             Obx(() => controller.isOwnVehicle.value
-                ? CustomSearchDropdown(
+                ? CustomSearchDropdown<String>(
                     items: controller.tripSheets,
                     hintText: "Select Trip Sheet",
+                    isLoading: controller.isLoadingTripSheets.value,
+                    selectedItem: controller.tripSheet.value.isEmpty
+                        ? null
+                        : controller.tripSheet.value,
                     onSelected: (val) => controller.tripSheet.value = val ?? '',
                   )
                 : CustomTextField(
+                    controller: controller.tripSheetController,
                     hintText: "Enter Trip Sheet/Amount",
                     onChanged: (val) => controller.tripSheet.value = val,
                   )),

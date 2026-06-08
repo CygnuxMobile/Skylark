@@ -66,11 +66,16 @@ class PrsScreen extends GetView<PrsController> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildLabel("Co-loader"),
-                    CustomSearchDropdown(
-                      items: controller.coLoaders,
-                      hintText: "Select Co-loader",
-                      onSelected: (val) =>
-                          controller.selectedCoLoader.value = val ?? '',
+                    Obx(
+                      () => CustomSearchDropdown(
+                        items: controller.coLoaders,
+                        hintText: "Select Co-loader",
+                        selectedItem: controller.selectedCoLoader.value.isEmpty
+                            ? null
+                            : controller.selectedCoLoader.value,
+                        onSelected: (val) =>
+                            controller.selectedCoLoader.value = val ?? '',
+                      ),
                     ),
                     const SizedBox(height: 15),
                   ],
@@ -79,10 +84,15 @@ class PrsScreen extends GetView<PrsController> {
             ),
 
             _buildLabel("Vendor Type"),
-            CustomSearchDropdown(
-              items: controller.vendorTypes,
-              hintText: "Select Vendor Type",
-              onSelected: controller.onVendorTypeChanged,
+            Obx(
+              () => CustomSearchDropdown(
+                items: controller.vendorTypes,
+                hintText: "Select Vendor Type",
+                selectedItem: controller.selectedVendorType.value.isEmpty
+                    ? null
+                    : controller.selectedVendorType.value,
+                onSelected: controller.onVendorTypeChanged,
+              ),
             ),
             const SizedBox(height: 15),
 
@@ -93,10 +103,14 @@ class PrsScreen extends GetView<PrsController> {
                       items: controller.vehicles,
                       hintText: "Select Vehicle No",
                       isLoading: controller.isLoadingVehicles.value,
+                      selectedItem: controller.vehicleNo.value.isEmpty
+                          ? null
+                          : controller.vehicleNo.value,
                       onSelected: (val) =>
                           controller.onVehicleNoChanged(val ?? ''),
                     )
                   : CustomTextField(
+                      controller: controller.vehicleNoController,
                       hintText: "Enter Vehicle No",
                       onChanged: (val) => controller.onVehicleNoChanged(val),
                     ),
@@ -114,6 +128,9 @@ class PrsScreen extends GetView<PrsController> {
                       items: controller.tripSheets,
                       hintText: "Select Trip Sheet",
                       isLoading: controller.isLoadingTripSheets.value,
+                      selectedItem: controller.tripSheet.value.isEmpty
+                          ? null
+                          : controller.tripSheet.value,
                       onSelected: (val) =>
                           controller.tripSheet.value = val ?? '',
                     ),

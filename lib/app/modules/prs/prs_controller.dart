@@ -9,6 +9,7 @@ class PrsController extends GetxController {
   final ApiService _apiService = Get.find<ApiService>();
   
   final originController = TextEditingController();
+  final vehicleNoController = TextEditingController();
   var origin = ''.obs;
   var selectedOrigin = Rxn<LocationModel>();
   
@@ -87,6 +88,7 @@ class PrsController extends GetxController {
   @override
   void onClose() {
     originController.dispose();
+    vehicleNoController.dispose();
     super.onClose();
   }
 
@@ -104,6 +106,7 @@ class PrsController extends GetxController {
     selectedVendorType.value = value ?? '';
     isOwnVehicle.value = value == 'OWN';
     vehicleNo.value = '';
+    vehicleNoController.clear();
     tripSheets.clear();
     tripSheet.value = '';
     if (isOwnVehicle.value) {
@@ -114,6 +117,9 @@ class PrsController extends GetxController {
   void onVehicleNoChanged(String value) {
     String formattedValue = value.replaceAll(' ', '').toUpperCase();
     vehicleNo.value = formattedValue;
+    if (vehicleNoController.text != formattedValue) {
+      vehicleNoController.text = formattedValue;
+    }
 
     final RegExp vehicleRegex = RegExp(r'^[A-Z]{2}[0-9]{2}[A-Z]{0,3}[0-9]{4}$');
 
