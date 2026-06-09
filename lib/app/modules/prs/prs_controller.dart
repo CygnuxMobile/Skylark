@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import 'package:skylark/app/data/models/location_model.dart';
+import 'package:skylark/app/data/models/login_response_model.dart';
 import 'package:skylark/app/data/models/prs_request_model.dart';
 import 'package:skylark/app/data/services/api_service.dart';
 import 'package:skylark/app/data/services/storage_service.dart';
@@ -20,6 +21,8 @@ class PrsController extends GetxController {
 
   final RxList<LocationModel> locations = <LocationModel>[].obs;
   var isLoadingLocations = false.obs;
+  final RxList<LocationModel> allLocations = <LocationModel>[].obs;
+  var isLoadingAllLocations = false.obs;
   var selectedLocation = Rxn<LocationModel>();
 
   final selectedCoLoader = RxnString();
@@ -49,6 +52,7 @@ class PrsController extends GetxController {
     super.onInit();
     getOriginLocation();
     getLocationMasterData();
+    getAllLocations();
     getCoLoaders();
   }
 
@@ -127,6 +131,28 @@ class PrsController extends GetxController {
       debugPrint("Error fetching locations: $e");
     } finally {
       isLoadingLocations.value = false;
+    }
+  }
+
+  Future<void> getAllLocations() async {
+    try {
+      isLoadingAllLocations.value = true;
+      final response = await _apiService.get(AppConstants.getAllLocationListUrl);
+
+      if (response.statusCode == 200 && response.data != null) {
+        List<dynamic> data = [];
+        if (response.data['data'] is List) {
+          data = response.data['data'];
+        } else if (response.data is List) {
+          data = response.data;
+        }
+
+        allLocations.assignAll(data.map((e) => LocationModel.fromJson(e)).toList());
+      }
+    } catch (e) {
+      debugPrint("Error fetching all locations: $e");
+    } finally {
+      isLoadingAllLocations.value = false;
     }
   }
 
@@ -214,8 +240,23 @@ class PrsController extends GetxController {
   }
 
   void onLocationChanged(LocationModel? value) {
+    debugPrint("selected Location === ${value!.toJson()}");
+
     selectedLocation.value = value;
-    if (value?.locName == origin.value) {
+    if (value == null) {
+      isLocalLocation.value = true;
+      return;
+    }
+
+    LoginData? user = _storageService.getUser();
+    debugPrint("user === ${user!.toJson()}");
+    List<LocationModel>? coLocations = user.coLocation ?? [];
+
+    bool isCoLocation = coLocations.any((e) => e == value);
+
+
+    debugPrint("isCoLocation === ${isCoLocation}");
+    if (isCoLocation) {
       isLocalLocation.value = true;
       selectedCoLoader.value = null;
     } else {
@@ -267,12 +308,13 @@ class PrsController extends GetxController {
         List<dynamic> data = [];
         if (response.data['data'] is List) {
           data = response.data['data'];
+          debugPrint("data data = $data");
         } else if (response.data is List) {
           data = response.data;
         }
 
         if (data.isNotEmpty) {
-          tripSheets.assignAll(data.map((e) => e['tripNo'].toString()).toList());
+          tripSheets.assignAll(data.map((e) => e['vSlipNo'].toString()).toList());
         } else {
           tripSheets.clear();
           if (!isOwnVehicle.value) {

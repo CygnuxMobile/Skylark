@@ -16,6 +16,7 @@ class CustomTextField extends StatelessWidget {
   final bool enabled;
   final bool isLoading;
   final int? maxLength;
+  final int? maxLines;
 
   const CustomTextField({
     super.key,
@@ -33,6 +34,7 @@ class CustomTextField extends StatelessWidget {
     this.enabled = true,
     this.isLoading = false,
     this.maxLength,
+    this.maxLines = 1,
   });
 
   @override
@@ -60,6 +62,7 @@ class CustomTextField extends StatelessWidget {
         readOnly: readOnly,
         enabled: enabled,
         maxLength: maxLength,
+        maxLines: maxLines,
         style: TextStyle(
           fontSize: 15, 
           fontWeight: FontWeight.w600,

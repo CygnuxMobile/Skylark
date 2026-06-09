@@ -59,6 +59,10 @@ class BookingController extends GetxController {
   var isLoadingConsignees = false.obs;
   var selectedConsignee = Rxn<CustomerModel>();
 
+  var transportModes = <Map<String, dynamic>>[].obs;
+  var selectedTransportMode = Rxn<Map<String, dynamic>>();
+  var isLoadingTransportModes = false.obs;
+
   var isLoadingEwayBill = false.obs;
   var ewayBillErrorMessage = ''.obs;
   var isLoadingFreight = false.obs;
@@ -68,20 +72,61 @@ class BookingController extends GetxController {
   var showDimensions = false.obs;
   var freightData = <String, dynamic>{}.obs;
 
+  var isValidatingCnote = false.obs;
+  var isCnoteValid = true.obs;
+  var cnoteValidationMessage = "".obs;
+
   @override
   void onInit() {
     super.onInit();
     ewayBillController.addListener(_onEwayBillChanged);
+    cnoteController.addListener(_onCnoteChanged);
     originPinController.addListener(_onPinChanged);
     destPinController.addListener(_onPinChanged);
 
     ever(selectedCustomer, (value) {
       if (value != null) {
         consignorController.text = "${value.custCode ?? ''} - ${value.custName ?? ''}";
+        fetchTransportModes(value.custCode ?? '');
+      } else {
+        transportModes.clear();
+        selectedTransportMode.value = null;
       }
     });
 
     fetchCustomers();
+  }
+
+  Future<void> fetchTransportModes(String custCode) async {
+    try {
+      isLoadingTransportModes.value = true;
+      final response = await _apiService.get(
+        AppConstants.getTransportModeUrl,
+        queryParameters: {
+          'Custcode': custCode,
+          'Paybas': 'P02',
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        List<dynamic> data = [];
+        if (response.data is List) {
+          data = response.data;
+        } else if (response.data['data'] is List) {
+          data = response.data['data'];
+        }
+        transportModes.assignAll(data.map((e) => Map<String, dynamic>.from(e)).toList());
+        
+        // Auto-select first if available
+        if (transportModes.isNotEmpty) {
+          selectedTransportMode.value = transportModes[0];
+        }
+      }
+    } catch (e) {
+      print('Error fetching transport modes: $e');
+    } finally {
+      isLoadingTransportModes.value = false;
+    }
   }
 
   Future<void> fetchPincodes(String query) async {
@@ -185,6 +230,58 @@ class BookingController extends GetxController {
       getEwayBillDetails(ewayBillController.text);
     } else {
       ewayBillErrorMessage.value = '';
+    }
+  }
+
+  void _onCnoteChanged() {
+    final text = cnoteController.text.trim();
+    if (text.length >= 4) {
+      debounce(_dummyRx, (_) => validateDocketSeries(text), time: 500.milliseconds);
+      _dummyRx.value = text;
+    } else {
+      isCnoteValid.value = true;
+      cnoteValidationMessage.value = "";
+    }
+  }
+
+  final _dummyRx = "".obs;
+
+  Future<void> validateDocketSeries(String docketNo) async {
+    try {
+      isValidatingCnote.value = true;
+      final storageService = Get.find<StorageService>();
+      final user = storageService.getUser();
+      final location = storageService.getLocation();
+
+      final response = await _apiService.get(
+        AppConstants.validateDocketSeriesUrl,
+        queryParameters: {
+          'DocketNo': docketNo,
+          'LocCode': location?.locCode ?? "",
+          'UserId': user?.userId ?? "",
+        },
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        final List<dynamic> data = response.data['data'] ?? [];
+        if (data.isNotEmpty) {
+          final result = data[0];
+          final String codeId = result['codeId']?.toString() ?? "0";
+          final String codeDesc = result['codeDesc']?.toString() ?? "";
+
+          if (codeId == "1") {
+            isCnoteValid.value = true;
+            cnoteValidationMessage.value = "Valid Series";
+          } else {
+            isCnoteValid.value = false;
+            cnoteValidationMessage.value = codeDesc.isNotEmpty ? codeDesc : "Invalid Series";
+          }
+        }
+      }
+    } catch (e) {
+      print('Error validating docket series: $e');
+    } finally {
+      isValidatingCnote.value = false;
     }
   }
 
@@ -318,6 +415,15 @@ class BookingController extends GetxController {
 
   void submitBooking() async {
     if (formKey.currentState!.validate()) {
+      if (cnoteController.text.isNotEmpty && !isCnoteValid.value) {
+        cnoteFocus.requestFocus();
+        CustomSnackbar.error(
+          title: 'Cnote Error',
+          message: cnoteValidationMessage.value.isNotEmpty ? cnoteValidationMessage.value : 'Invalid Cnote Series',
+        );
+        return;
+      }
+
       if (ewayBillErrorMessage.value.isNotEmpty) {
         ewayBillFocus.requestFocus();
         CustomSnackbar.error(
@@ -494,9 +600,9 @@ class BookingController extends GetxController {
         "ToCity": dest.toCity ?? "",
         "OrgnLoc": origin.orgncd ?? "",
         "DelLoc": dest.destcd ?? "",
-        "ServiceType": dest.serviceType ?? "",
-        "FTLType": dest.businesstype ?? "",
-        "TransMode": dest.transType ?? "",
+        "ServiceType": 1,
+        "FTLType": "",
+        "TransMode": selectedTransportMode.value?['codeId']?.toString() ?? dest.transType ?? "",
         "ChargedWeight": aWeightController.text,
         "NoOfPkgs": pkgsController.text,
         "OrderID": selectedCustomer.value?.contractId ?? "",
@@ -568,7 +674,7 @@ class BookingController extends GetxController {
         "desTstnm": dest?.desTstnm ?? "",
         "destArea": dest?.destArea ?? "",
         "pkp_dly": dest?.pkpDly ?? "",
-        "trans_type": dest?.transType ?? "",
+        "trans_type": selectedTransportMode.value?['codeId']?.toString() ?? dest?.transType ?? "",
         "service_type": dest?.serviceType ?? "",
         "pkgsty": dest?.pkgsty ?? "",
         "businesstype": dest?.businesstype ?? "",
@@ -582,7 +688,7 @@ class BookingController extends GetxController {
         "billingState": origin?.orgNstnm ?? "",
         "serviceType": dest?.serviceType ?? "1",
         "ftlType": dest?.businesstype ?? "1",
-        "transMode": dest?.transType ?? "5",
+        "transMode": selectedTransportMode.value?['codeId']?.toString() ?? dest?.transType ?? "5",
         "chargedWeight": double.tryParse(aWeightController.text) ?? 0,
         "noOfPkgs": int.tryParse(pkgsController.text) ?? 0,
         "acT_WT": double.tryParse(aWeightController.text) ?? 0,

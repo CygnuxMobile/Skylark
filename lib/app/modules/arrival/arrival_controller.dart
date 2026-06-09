@@ -43,7 +43,14 @@ class ArrivalController extends GetxController {
       final toDateStr = dateFormat.format(toDate.value ?? DateTime.now());
       final fromDateStr = dateFormat.format(fromDate.value ?? DateTime.now().subtract(const Duration(days: 7)));
 
-      final body = {"thcNo": "", "fromDate": fromDateStr, "toDate": toDateStr, "transportMode": "S", "baseComapnyCode": user?.baseCompanyCode ?? "", "baseLocationCode": location?.locCode ?? ""};
+      final body = {
+        "thcNo": "",
+        "fromDate": fromDateStr,
+        "toDate": toDateStr,
+        "transportMode": "S",
+        "baseCompanyCode": user?.baseCompanyCode ?? "",
+        "baseLocationCode": location?.locCode ?? ""
+      };
 
       final response = await _apiService.post(AppConstants.thcArrivalsListUrl, data: body);
 

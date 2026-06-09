@@ -35,118 +35,124 @@ class DashboardScreen extends GetView<DashboardController> {
           ),
         ),
       ),
-      body: Column(
-        children: [
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  "Select Location",
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.darkBlue,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "Select Location",
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.darkBlue,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                Obx(() {
-                  final locationList = controller.locations
-                      .map((loc) => "${loc.locName ?? ''} (${loc.locCode ?? ''})")
-                      .toList();
-
-                  return CustomSearchDropdown(
-                    isLoading: controller.isLoadingLocations.value,
-                    items: locationList,
-                    hintText: "Search & Select Location",
-                    selectedItem: controller.selectedLocation.value != null 
-                        ? "${controller.selectedLocation.value!.locName} (${controller.selectedLocation.value!.locCode})"
-                        : null,
-                    onSelected: (String? value) {
-                      if (value != null) {
-                        final selected = controller.locations.firstWhereOrNull(
-                          (loc) => "${loc.locName} (${loc.locCode})" == value,
-                        );
-                        if (selected != null) {
-                          controller.onLocationChanged(selected);
+                  const SizedBox(height: 8),
+                  Obx(() {
+                    final locationList = controller.locations
+                        .map((loc) => "${loc.locName ?? ''} (${loc.locCode ?? ''})")
+                        .toList();
+  
+                    return CustomSearchDropdown(
+                      isLoading: controller.isLoadingLocations.value,
+                      items: locationList,
+                      hintText: "Search & Select Location",
+                      selectedItem: controller.selectedLocation.value != null 
+                          ? "${controller.selectedLocation.value!.locName} (${controller.selectedLocation.value!.locCode})"
+                          : null,
+                      onSelected: (String? value) {
+                        if (value != null) {
+                          final selected = controller.locations.firstWhereOrNull(
+                            (loc) => "${loc.locName} (${loc.locCode})" == value,
+                          );
+                          if (selected != null) {
+                            controller.onLocationChanged(selected);
+                          }
                         }
-                      }
-                    },
-                  );
-                }),
-              ],
+                      },
+                    );
+                  }),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 10),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              children: [
-                _menuTile(
-                  icon: Icons.edit_document,
-                  title: 'Booking Screen',
-                  subtitle: 'Manage and create new bookings',
-                  color: AppColors.primaryBlue,
-                  onTap: () {
-                    if (controller.selectedLocation.value == null) {
-                      CustomSnackbar.show(
-                        title: 'Location Required',
-                        message: 'Please select a location first',
-                        backgroundColor: Colors.orange,
-                      );
-                    } else {
-                      Get.toNamed(AppRoutes.booking);
-                    }
-                  },
-                ),
-                _menuTile(
-                  icon: Icons.local_shipping_rounded,
-                  title: 'Arrival',
-                  subtitle: 'Manage shipment arrivals',
-                  color: AppColors.secondaryGreen,
-                  onTap: () => Get.toNamed(AppRoutes.arrival),
-                ),
-                _menuTile(
-                  icon: Icons.assignment_rounded,
-                  title: 'PRS',
-                  subtitle: 'Pickup Request System',
-                  color: AppColors.primaryBlue,
-                  onTap: () => Get.toNamed(AppRoutes.prs),
-                ),
-                _menuTile(
-                  icon: Icons.assignment_turned_in_rounded,
-                  title: 'PRS Closure',
-                  subtitle: 'Complete pending pickup requests',
-                  color: AppColors.secondaryGreen,
-                  onTap: () => Get.toNamed(AppRoutes.prsClosure),
-                ),
-                _menuTile(
-                  icon: Icons.local_shipping_rounded,
-                  title: 'DRS Generation',
-                  subtitle: 'Generate Delivery Run Sheets',
-                  color: AppColors.primaryBlue,
-                  onTap: () => Get.toNamed(AppRoutes.drsGeneration),
-                ),
-                _menuTile(
-                  icon: Icons.done_all_rounded,
-                  title: 'DRS Closure',
-                  subtitle: 'Complete and close delivery run sheets',
-                  color: AppColors.secondaryGreen,
-                  onTap: () => Get.toNamed(AppRoutes.drsClosure),
-                ),
-                _menuTile(
-                  icon: Icons.cloud_upload_rounded,
-                  title: 'POD Upload',
-                  subtitle: 'Search and upload proof of delivery',
-                  color: AppColors.darkBlue,
-                  onTap: () => Get.toNamed(AppRoutes.podUpload),
-                ),
-              ],
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                children: [
+                  _menuTile(
+                    icon: Icons.edit_document,
+                    title: 'Booking Screen',
+                    subtitle: 'Manage and create new bookings',
+                    color: AppColors.primaryBlue,
+                    onTap: () => controller.navigateToRoute(AppRoutes.booking),
+                  ),
+                  _menuTile(
+                    icon: Icons.local_shipping_rounded,
+                    title: 'Arrival',
+                    subtitle: 'Manage shipment arrivals',
+                    color: AppColors.secondaryGreen,
+                    onTap: () => controller.navigateToRoute(AppRoutes.arrival),
+                  ),
+                  _menuTile(
+                    icon: Icons.assignment_rounded,
+                    title: 'PRS',
+                    subtitle: 'Pickup Request System',
+                    color: AppColors.primaryBlue,
+                    onTap: () => controller.navigateToRoute(AppRoutes.prs),
+                  ),
+                  _menuTile(
+                    icon: Icons.assignment_turned_in_rounded,
+                    title: 'PRS Closure',
+                    subtitle: 'Complete pending pickup requests',
+                    color: AppColors.secondaryGreen,
+                    onTap: () => controller.navigateToRoute(AppRoutes.prsClosure),
+                  ),
+                  _menuTile(
+                    icon: Icons.local_shipping_rounded,
+                    title: 'DRS Generation',
+                    subtitle: 'Generate Delivery Run Sheets',
+                    color: AppColors.primaryBlue,
+                    onTap: () => controller.navigateToRoute(AppRoutes.drsGeneration),
+                  ),
+                  _menuTile(
+                    icon: Icons.done_all_rounded,
+                    title: 'DRS Closure',
+                    subtitle: 'Complete and close delivery run sheets',
+                    color: AppColors.secondaryGreen,
+                    onTap: () => controller.navigateToRoute(AppRoutes.drsClosure),
+                  ),
+                  _menuTile(
+                    icon: Icons.cloud_upload_rounded,
+                    title: 'POD Upload',
+                    subtitle: 'Search and upload proof of delivery',
+                    color: AppColors.primaryBlue,
+                    onTap: () => controller.navigateToRoute(AppRoutes.podUpload),
+                  ),
+                  _menuTile(
+                    icon: Icons.payments_rounded,
+                    title: 'Expense Entry',
+                    subtitle: 'Branch daily expense entry',
+                    color: AppColors.secondaryGreen,
+                    onTap: () => controller.navigateToRoute(AppRoutes.expense),
+                  ),
+                  _menuTile(
+                    icon: Icons.list_alt_rounded,
+                    title: 'Stock Update Arrival',
+                    subtitle: 'View arrival stock update list',
+                    color: AppColors.primaryBlue,
+                    onTap: () => controller.navigateToRoute(AppRoutes.manifest),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -1,5 +1,6 @@
 class AppConstants {
-  static const String baseUrl = 'http://43.248.56.36:44399/V1/';
+  // static const String baseUrl = 'http://43.248.56.36:44399/V1/';
+    static const String baseUrl = 'http://43.248.56.36:44399/V1/';
 
   // ==========================================
   // AUTH MODULE
@@ -10,7 +11,9 @@ class AppConstants {
   // MASTER MODULE (COMMON DATA)
   // ==========================================
   static const String getLocationMasterDataUrl = 'Master/GetLocationMasterData';
+  static const String getAllLocationListUrl = 'Master/GetAllLocationList';
   static const String getCustomerListUrl = 'Master/GetCustomerList';
+  static const String getTransportModeUrl = 'Master/GetTransportMode';
 
   // ==========================================
   // BOOKING MODULE
@@ -21,6 +24,7 @@ class AppConstants {
   static const String getToPincodeDetailsUrl = 'Operation/GetToPincodeDetails';
   static const String getContractFreightUrl = 'Operation/GetContractFreight';
   static const String getConsigneeUrl = 'Operation/GetConsignee';
+  static const String validateDocketSeriesUrl = 'Operation/ValidateDocketSeries';
   static const String docketSubmitUrl = 'Operation/DocketSubmit';
 
   // ==========================================
@@ -50,6 +54,12 @@ class AppConstants {
   static const String thcArrivalSubmitUrl = 'Operation/THCArrivalSubmit';
   static const String updateDrsDetailsUrl = 'Operation/UpdateDRSDetails';
   static const String updateDrsUrl = 'Operation/UpdateDRS';
+  static const String specialCostVoucherSubmitUrl = 'Operation/SpecialCostVoucherSubmit';
+  static const String getAccountCodeListUrl = 'Operation/GetAccountCodeList';
+  static const String validateDocumentUrl = 'Operation/ValidateDocument';
+  static const String arrivalStockUpdateListUrl = 'Operation/ArrivalStockUpdateList';
+  static const String arrivalStockUpdateDetailUrl = 'Operation/ArrivalStockUpdateDetail';
+  static const String arrivalStockUpdateSubmitUrl = 'Operation/ArrivalStockUpdateSubmite';
 
   // ==========================================
   // STORAGE KEYS (LOCAL PREFERENCES)

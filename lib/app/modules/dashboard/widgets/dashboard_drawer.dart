@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:skylark/app/core/values/app_colors.dart';
-import 'package:skylark/app/core/widgets/custom_snackbar.dart';
 import 'package:skylark/app/modules/dashboard/dashboard_controller.dart';
-import 'package:skylark/app/routes/app_routes.dart';
 
 class DashboardDrawer extends GetView<DashboardController> {
   const DashboardDrawer({super.key});
@@ -76,60 +74,7 @@ class DashboardDrawer extends GetView<DashboardController> {
               ),
             );
           }),
-          const SizedBox(height: 15),
-          Expanded(
-            child: ListView(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              children: [
-                _drawerItem(
-                  icon: Icons.edit_document,
-                  text: 'Booking Screen',
-                  color: AppColors.primaryBlue,
-                  onTap: () {
-                    if (controller.selectedLocation.value == null) {
-                      CustomSnackbar.show(
-                        title: 'Location Required',
-                        message: 'Please select a location first',
-                        backgroundColor: Colors.orange,
-                      );
-                    } else {
-                      Get.toNamed(AppRoutes.booking);
-                    }
-                  },
-                ),
-                _drawerItem(
-                  icon: Icons.assignment_rounded,
-                  text: 'PRS',
-                  color: AppColors.secondaryGreen,
-                  onTap: () => Get.toNamed(AppRoutes.prs),
-                ),
-                _drawerItem(
-                  icon: Icons.assignment_turned_in_rounded,
-                  text: 'PRS Closure',
-                  color: AppColors.primaryBlue,
-                  onTap: () => Get.toNamed(AppRoutes.prsClosure),
-                ),
-                _drawerItem(
-                  icon: Icons.inventory_2_rounded,
-                  text: 'Stock Update',
-                  color: AppColors.secondaryGreen,
-                  onTap: () => Get.toNamed(AppRoutes.stockUpdate),
-                ),
-                _drawerItem(
-                  icon: Icons.local_shipping_rounded,
-                  text: 'DRS Generation',
-                  color: AppColors.primaryBlue,
-                  onTap: () => Get.toNamed(AppRoutes.drsGeneration),
-                ),
-                _drawerItem(
-                  icon: Icons.done_all_rounded,
-                  text: 'DRS Closure',
-                  color: AppColors.darkBlue,
-                  onTap: () => Get.toNamed(AppRoutes.drsClosure),
-                ),
-              ],
-            ),
-          ),
+          const Spacer(),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 10),
             child: Column(

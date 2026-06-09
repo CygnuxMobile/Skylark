@@ -1,3 +1,5 @@
+import 'package:skylark/app/data/models/location_model.dart';
+
 class LoginResponseModel {
   final int? statusCode;
   final int? status;
@@ -49,8 +51,8 @@ class LoginData {
   final String? branchCode;
   final String? finYear;
   final String? city;
-  final List<MultiLocation>? multiLocation;
-  final List<MultiLocation>? coLocation;
+  final List<LocationModel>? multiLocation;
+  final List<LocationModel>? coLocation;
 
   LoginData({
     this.token,
@@ -80,10 +82,10 @@ class LoginData {
       finYear: json['finYear'],
       city: json['city'],
       multiLocation: json['multiLocation'] != null
-          ? (json['multiLocation'] as List).map((i) => MultiLocation.fromJson(i)).toList()
+          ? (json['multiLocation'] as List).map((i) => LocationModel.fromJson(i)).toList()
           : null,
       coLocation: json['coLocation'] != null
-          ? (json['coLocation'] as List).map((i) => MultiLocation.fromJson(i)).toList()
+          ? (json['coLocation'] as List).map((i) => LocationModel.fromJson(i)).toList()
           : null,
     );
   }

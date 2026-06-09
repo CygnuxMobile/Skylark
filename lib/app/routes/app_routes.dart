@@ -13,4 +13,6 @@ class AppRoutes {
   static const drsClosure = '/drs-closure';
   static const drsClosureDetail = '/drs-closure-detail';
   static const podUpload = '/pod-upload';
+  static const expense = '/expense';
+  static const manifest = '/manifest';
 }

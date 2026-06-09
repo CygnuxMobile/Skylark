@@ -29,3 +29,6 @@ class LocationModel {
   @override
   int get hashCode => locCode.hashCode ^ locName.hashCode;
 }
+
+
+

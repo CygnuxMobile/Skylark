@@ -24,6 +24,10 @@ import 'package:skylark/app/modules/pod_upload/pod_upload_screen.dart';
 import 'package:skylark/app/modules/stock_update/stock_update_binding.dart';
 import 'package:skylark/app/modules/stock_update/stock_update_screen.dart';
 import 'package:skylark/app/modules/stock_update/sub_screen/stock_update_detail_screen.dart';
+import 'package:skylark/app/modules/expense/expense_binding.dart';
+import 'package:skylark/app/modules/expense/expense_screen.dart';
+import 'package:skylark/app/modules/manifest/manifest_binding.dart';
+import 'package:skylark/app/modules/manifest/manifest_screen.dart';
 import 'app_routes.dart';
 
 class AppPages {
@@ -97,6 +101,16 @@ class AppPages {
       name: AppRoutes.podUpload,
       page: () => const PODUploadScreen(),
       binding: PODUploadBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.expense,
+      page: () => const ExpenseScreen(),
+      binding: ExpenseBinding(),
+    ),
+    GetPage(
+      name: AppRoutes.manifest,
+      page: () => const ManifestScreen(),
+      binding: ManifestBinding(),
     ),
   ];
 }

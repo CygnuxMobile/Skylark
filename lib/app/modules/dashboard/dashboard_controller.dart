@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:skylark/app/core/values/app_constants.dart';
+import 'package:skylark/app/core/widgets/custom_snackbar.dart';
 import 'package:skylark/app/data/models/location_model.dart';
 import 'package:skylark/app/data/models/login_response_model.dart';
 import 'package:skylark/app/data/services/api_service.dart';
@@ -61,10 +63,24 @@ class DashboardController extends GetxController {
     }
   }
 
+
+
   void onLocationChanged(LocationModel? value) {
     selectedLocation.value = value;
     if (value != null) {
       _storageService.saveLocation(value);
+    }
+  }
+
+  void navigateToRoute(String route) {
+    if (selectedLocation.value == null) {
+      CustomSnackbar.show(
+        title: 'Location Required',
+        message: 'Please select a location first',
+        backgroundColor: Colors.orange,
+      );
+    } else {
+      Get.toNamed(route);
     }
   }
 
