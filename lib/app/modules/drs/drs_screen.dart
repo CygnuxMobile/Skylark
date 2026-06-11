@@ -45,7 +45,6 @@ class DrsScreen extends GetView<DrsController> {
                     ),
                   ),
                   const SizedBox(height: 15),
-
                   _buildLabel("Vendor Type"),
                   Obx(
                     () => CustomSearchDropdown<String>(
@@ -126,7 +125,7 @@ class DrsScreen extends GetView<DrsController> {
                         child: CustomTextField(
                           controller: controller.cnoteController,
                           hintText: "Enter Cnote No",
-                          keyboardType: TextInputType.number,
+                          keyboardType: TextInputType.text,
                         ),
                       ),
                       const SizedBox(width: 10),

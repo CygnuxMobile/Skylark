@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:skylark/app/core/values/app_colors.dart';
 import 'package:skylark/app/core/widgets/custom_button.dart';
+import 'package:skylark/app/core/widgets/custom_search_dropdown.dart';
 import 'package:skylark/app/core/widgets/custom_text_field.dart';
 import '../prs_closure_controller.dart';
 
@@ -32,9 +33,19 @@ class PrsClosureDetailScreen extends GetView<PrsClosureController> {
             const SizedBox(height: 15),
 
             _buildLabel("Vendor Name"),
-            CustomTextField(
-              controller: controller.vendorNameController,
-            ),
+            Obx(() => CustomSearchDropdown<dynamic>(
+              items: controller.vendorList,
+              hintText: "Select Vendor",
+              isLoading: controller.isLoadingVendors.value,
+              selectedItem: controller.selectedVendor.value,
+              itemAsString: (item) => item['vendor_Name'] ?? item['vendorname'] ?? "",
+              onSelected: (val) {
+                controller.selectedVendor.value = val;
+                if (val != null) {
+                  controller.vendorNameController.text = val['vendor_Name'] ?? val['vendorname'] ?? "";
+                }
+              },
+            )),
             const SizedBox(height: 15),
 
             Obx(() => controller.selectedVendorType.value == '01' 

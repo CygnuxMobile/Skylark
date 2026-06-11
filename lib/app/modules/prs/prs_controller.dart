@@ -16,6 +16,7 @@ class PrsController extends GetxController {
 
   final originController = TextEditingController();
   final cnoteController = TextEditingController();
+  final cdNoController = TextEditingController();
   var origin = ''.obs;
   var selectedOrigin = Rxn<LocationModel>();
 
@@ -160,6 +161,7 @@ class PrsController extends GetxController {
   void onClose() {
     originController.dispose();
     cnoteController.dispose();
+    cdNoController.dispose();
     super.onClose();
   }
 
@@ -395,6 +397,7 @@ class PrsController extends GetxController {
         baseFinYear: user?.finYear ?? "",
         docType: "PRS",
         startKm: "0",
+        cdNo: cdNoController.text.trim(),
         prsGenerateList: selectedCnoteData
             .map(
               (e) => PrsGenerateList(

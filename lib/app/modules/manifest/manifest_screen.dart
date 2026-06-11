@@ -126,49 +126,65 @@ class ManifestScreen extends GetView<ManifestController> {
   Widget _buildManifestCard(Map<String, dynamic> data) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey.shade100),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withOpacity(0.04),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildHeaderInfo("MF NO", data['mf'] ?? "N/A", color: AppColors.primaryBlue),
-              _buildHeaderInfo("MF Date", data['mF_Date'] ?? "N/A", alignRight: true),
-            ],
+          Padding(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildHeaderInfo("MF NO", data['mf'] ?? "N/A", color: AppColors.primaryBlue),
+                    _buildHeaderInfo("MF Date", data['mF_Date'] ?? "N/A", alignRight: true),
+                  ],
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Divider(height: 1),
+                ),
+                _buildInfoRow(Icons.route_outlined, "Route", data['route'] ?? "N/A"),
+                const SizedBox(height: 12),
+                _buildInfoRow(Icons.confirmation_number_outlined, "CD NO", data['cdno'] ?? "N/A"),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(child: _buildInfoRow(Icons.business_center_outlined, "Vendor", data['vendorname'] ?? "N/A")),
+                    Container(height: 25, width: 1, color: Colors.grey.shade200, margin: const EdgeInsets.symmetric(horizontal: 10)),
+                    Expanded(child: _buildInfoRow(Icons.inventory_2_outlined, "Dockets", (data['docketKount'] ?? 0).toString())),
+                  ],
+                ),
+              ],
+            ),
           ),
-          const Divider(height: 25),
-          _buildInfoRow(Icons.route, "Route", data['route'] ?? "N/A"),
-          const SizedBox(height: 15),
-          Align(
-            alignment: Alignment.centerRight,
-            child: SizedBox(
-              height: 35,
-              child: ElevatedButton(
-                onPressed: () => Get.to(() => ManifestArrivalDetailScreen(
-                      manifestData: data,
-                    )),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryBlue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+          InkWell(
+            onTap: () => Get.to(() => ManifestArrivalDetailScreen(manifestData: data)),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: const BoxDecoration(
+                color: AppColors.primaryBlue,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(15),
+                  bottomRight: Radius.circular(15),
                 ),
-                child: const Text(
-                  "Details",
-                  style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.bold),
-                ),
+              ),
+              child: const Text(
+                "View Details",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
               ),
             ),
           ),

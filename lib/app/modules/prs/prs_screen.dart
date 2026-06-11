@@ -62,6 +62,13 @@ class PrsScreen extends GetView<PrsController> {
                       ),
                     ),
                     const SizedBox(height: 15),
+
+                    _buildLabel("CD NO"),
+                    CustomTextField(
+                      controller: controller.cdNoController,
+                      hintText: "Enter CD Number",
+                    ),
+                    const SizedBox(height: 15),
   
                     Obx(
                       () => Visibility(

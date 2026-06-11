@@ -19,106 +19,191 @@ class PODUploadScreen extends GetView<PODUploadController> {
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
       ),
-      body: Obx(() {
-        if (controller.isLoading.value) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      body: Column(
+        children: [
+          _buildFilterSection(context),
+          Expanded(
+            child: Obx(() {
+              if (controller.isLoading.value) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-        if (controller.podList.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.description_outlined, size: 80, color: Colors.grey.shade300),
-                const SizedBox(height: 16),
-                const Text(
-                  "No POD records found",
-                  style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(height: 24),
-                ElevatedButton.icon(
-                  onPressed: () => controller.fetchPODList(),
-                  icon: const Icon(Icons.refresh, size: 20),
-                  label: const Text(
-                    "Retry",
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.5),
-                  ),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    elevation: 3,
-                    shadowColor: AppColors.primaryBlue.withOpacity(0.3),
-                  ),
-                )
-              ],
-            ),
-          );
-        }
-
-        return RefreshIndicator(
-          onRefresh: () => controller.fetchPODList(),
-          child: ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: controller.podList.length,
-            itemBuilder: (context, index) {
-              final pod = controller.podList[index];
-              
-              String displayDate = pod['dockdt'] ?? 'N/A';
-              try {
-                if (pod['dockdt'] != null) {
-                  DateTime dt = DateTime.parse(pod['dockdt']);
-                  displayDate = DateFormat('dd-MM-yyyy').format(dt);
-                }
-              } catch (e) {}
-
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(15),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-                  title: Text(
-                    "Dock No: ${pod['dockno'] ?? 'N/A'}", 
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.darkBlue)
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+              if (controller.podList.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(height: 4),
-                      Text("Date: $displayDate"),
+                      Icon(Icons.description_outlined, size: 80, color: Colors.grey.shade300),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "No POD records found",
+                        style: TextStyle(fontSize: 16, color: Colors.grey, fontWeight: FontWeight.w500),
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton.icon(
+                        onPressed: () => controller.fetchPODList(),
+                        icon: const Icon(Icons.refresh, size: 20),
+                        label: const Text(
+                          "Retry",
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primaryBlue,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 3,
+                          shadowColor: AppColors.primaryBlue.withOpacity(0.3),
+                        ),
+                      )
                     ],
                   ),
-                  trailing: InkWell(
-                    onTap: () => _showImagePickerSheet(pod['dockno'] ?? 'N/A'),
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
+                );
+              }
+
+              return RefreshIndicator(
+                onRefresh: () => controller.fetchPODList(),
+                child: ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: controller.podList.length,
+                  itemBuilder: (context, index) {
+                    final pod = controller.podList[index];
+                    
+                    String displayDate = pod['dockdt'] ?? 'N/A';
+                    try {
+                      if (pod['dockdt'] != null) {
+                        DateTime dt = DateTime.parse(pod['dockdt']);
+                        displayDate = DateFormat('dd-MM-yyyy').format(dt);
+                      }
+                    } catch (e) {}
+
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.primaryBlue.withOpacity(0.1),
-                        shape: BoxShape.circle,
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primaryBlue),
-                    ),
-                  ),
-                  onTap: () => _showImagePickerSheet(pod['dockno'] ?? 'N/A'),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                        title: Text(
+                          "Dock No: ${pod['dockno'] ?? 'N/A'}", 
+                          style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.darkBlue)
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Text("Date: $displayDate"),
+                          ],
+                        ),
+                        trailing: InkWell(
+                          onTap: () => _showImagePickerSheet(pod['dockno'] ?? 'N/A'),
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryBlue.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.cloud_upload_outlined, color: AppColors.primaryBlue),
+                          ),
+                        ),
+                        onTap: () => _showImagePickerSheet(pod['dockno'] ?? 'N/A'),
+                      ),
+                    );
+                  },
                 ),
               );
-            },
+            }),
           ),
-        );
-      }),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFilterSection(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => controller.selectFromDate(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Obx(() => Text(
+                          DateFormat('dd-MM-yyyy').format(controller.fromDate.value),
+                          style: const TextStyle(fontSize: 14),
+                        )),
+                        const Icon(Icons.calendar_today, size: 18, color: AppColors.primaryBlue),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => controller.selectToDate(context),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Obx(() => Text(
+                          DateFormat('dd-MM-yyyy').format(controller.toDate.value),
+                          style: const TextStyle(fontSize: 14),
+                        )),
+                        const Icon(Icons.calendar_today, size: 18, color: AppColors.primaryBlue),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              IconButton(
+                onPressed: () => controller.fetchPODList(),
+                icon: const Icon(Icons.search, color: Colors.white),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppColors.primaryBlue,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 

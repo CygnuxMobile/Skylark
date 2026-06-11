@@ -149,15 +149,18 @@ class BookingScreen extends GetView<BookingController> {
                           _buildFieldLabel('Origin Pin'),
                           Obx(
                             () => CustomSearchDropdown<PincodeModel>(
-                              items: controller.locations,
+                              items: controller.fromLocations,
                               focusNode: controller.originFocus,
                               hintText: 'Origin',
-                              isLoading: controller.isLoadingLocations.value,
-                              isSearching: controller.isLoadingLocations,
+                              isLoading: controller.isLoadingFromPincodes.value,
                               selectedItem: controller.selectedOrigin.value,
                               itemAsString: (item) => item.pincode ?? '',
-                              onSearch: (val) => controller.fetchPincodes(val),
-                              onTap: () => controller.locations.clear(),
+                              onTap: () {
+                                if (controller.fromLocations.isEmpty) {
+                                  controller.fetchFromPincodes();
+                                }
+                              },
+                              onRefresh: () => controller.fetchFromPincodes(),
                               compareFn: (item, selectedItem) => item.pincode == selectedItem.pincode,
                               validator: (value) => value == null || value.isEmpty ? 'Origin required' : null,
                               onSelected: (value) => controller.onOriginSelected(value),

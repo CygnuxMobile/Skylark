@@ -20,6 +20,7 @@ class AppConstants {
   // ==========================================
   static const String getEwayBillDetailsUrl = 'Operation/GetEwaybillDetailsFromAPI';
   static const String getPincodeUrl = 'Operation/GetPincode';
+  static const String getFromPincodeUrl = 'Operation/GetFromPincode';
   static const String getFromPincodeDetailsUrl = 'Operation/GetFromPincodeDetails';
   static const String getToPincodeDetailsUrl = 'Operation/GetToPincodeDetails';
   static const String getContractFreightUrl = 'Operation/GetContractFreight';

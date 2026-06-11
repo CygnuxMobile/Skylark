@@ -19,6 +19,9 @@ class PODUploadController extends GetxController {
   var isLoading = false.obs;
   final RxList<dynamic> podList = <dynamic>[].obs;
 
+  var fromDate = DateTime.now().subtract(const Duration(days: 7)).obs;
+  var toDate = DateTime.now().obs;
+
   var frontImage = Rxn<File>();
   var backImage = Rxn<File>();
   var isUploading = false.obs;
@@ -35,18 +38,15 @@ class PODUploadController extends GetxController {
       final user = _storageService.getUser();
       final location = _storageService.getLocation();
       
-      final now = DateTime.now();
-      final sevenDaysAgo = now.subtract(const Duration(days: 7));
-      
-      final String fromDate = DateFormat('dd MMM yyyy').format(sevenDaysAgo);
-      final String toDate = DateFormat('dd MMM yyyy').format(now);
+      final String fromDateStr = DateFormat('dd MMM yyyy').format(fromDate.value);
+      final String toDateStr = DateFormat('dd MMM yyyy').format(toDate.value);
 
       final body = {
         "brcd": location?.locCode ?? "",
         "userName": user?.userId ?? "",
         "companyCode": user?.baseCompanyCode ?? "",
-        "fromDate": fromDate,
-        "toDate": toDate,
+        "fromDate": fromDateStr,
+        "toDate": toDateStr,
         "gcNo": ""
       };
 
@@ -77,6 +77,30 @@ class PODUploadController extends GetxController {
     }
   }
 
+  Future<void> selectFromDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: fromDate.value,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != fromDate.value) {
+      fromDate.value = picked;
+    }
+  }
+
+  Future<void> selectToDate(BuildContext context) async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: toDate.value,
+      firstDate: DateTime(2000),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != toDate.value) {
+      toDate.value = picked;
+    }
+  }
+
   Future<void> pickImage(bool isFront, ImageSource source, String docketNo) async {
     final XFile? image = await _picker.pickImage(
       source: source,
@@ -87,11 +111,11 @@ class PODUploadController extends GetxController {
     if (image != null) {
       try {
         final user = _storageService.getUser();
-        final location = _storageService.getLocation();
         final userName = user?.userId ?? "user";
-        final brcd = location?.locCode ?? "loc";
         
-        String newName = 'P@$docketNo@$userName@$brcd${isFront ? "_F" : "_B"}.jpg';
+        String extension = path.extension(image.path);
+        if (extension.isEmpty) extension = ".jpg";
+        String newName = 'POD@$docketNo@$userName@${isFront ? "1" : "2"}$extension';
         
         final String dirPath = path.dirname(image.path);
         final String newPath = path.join(dirPath, newName);

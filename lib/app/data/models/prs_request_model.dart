@@ -21,6 +21,7 @@ class PrsRequestModel {
     String baseFinYear;
     String docType;
     String startKm;
+    String? cdNo;
     List<PrsGenerateList> prsGenerateList;
 
     PrsRequestModel({
@@ -40,6 +41,7 @@ class PrsRequestModel {
         required this.baseFinYear,
         required this.docType,
         required this.startKm,
+        this.cdNo,
         required this.prsGenerateList,
     });
 
@@ -60,6 +62,7 @@ class PrsRequestModel {
         baseFinYear: json["baseFinYear"] ?? "",
         docType: json["doc_Type"] ?? "",
         startKm: json["start_KM"] ?? "0",
+        cdNo: json["cdNo"],
         prsGenerateList: json["prsGenerateList"] != null 
             ? List<PrsGenerateList>.from(json["prsGenerateList"].map((x) => PrsGenerateList.fromJson(x)))
             : [],
@@ -82,6 +85,7 @@ class PrsRequestModel {
         "baseFinYear": baseFinYear,
         "doc_Type": docType,
         "start_KM": startKm,
+        "cdNo": cdNo,
         "prsGenerateList": List<dynamic>.from(prsGenerateList.map((x) => x.toJson())),
     };
 }

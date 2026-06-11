@@ -12,6 +12,18 @@ class DashboardScreen extends GetView<DashboardController> {
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> menuItems = [
+      {'icon': Icons.edit_document, 'title': 'Booking Screen', 'subtitle': 'Manage and create new bookings', 'route': AppRoutes.booking},
+      // {'icon': Icons.local_shipping_rounded, 'title': 'Arrival', 'subtitle': 'Manage shipment arrivals', 'route': AppRoutes.arrival},
+      {'icon': Icons.assignment_rounded, 'title': 'PRS', 'subtitle': 'Pickup Request System', 'route': AppRoutes.prs},
+      {'icon': Icons.assignment_turned_in_rounded, 'title': 'PRS Closure', 'subtitle': 'Complete pending pickup requests', 'route': AppRoutes.prsClosure},
+      {'icon': Icons.list_alt_rounded, 'title': 'Stock Update Arrival', 'subtitle': 'View arrival stock update list', 'route': AppRoutes.manifest},
+      {'icon': Icons.local_shipping_rounded, 'title': 'DRS Generation', 'subtitle': 'Generate Delivery Run Sheets', 'route': AppRoutes.drsGeneration},
+      {'icon': Icons.done_all_rounded, 'title': 'DRS Closure', 'subtitle': 'Complete and close delivery run sheets', 'route': AppRoutes.drsClosure},
+      {'icon': Icons.cloud_upload_rounded, 'title': 'POD Upload', 'subtitle': 'Search and upload proof of delivery', 'route': AppRoutes.podUpload},
+      {'icon': Icons.payments_rounded, 'title': 'Expense Entry', 'subtitle': 'Branch daily expense entry', 'route': AppRoutes.expense},
+    ];
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FD),
       drawer: const DashboardDrawer(),
@@ -21,12 +33,7 @@ class DashboardScreen extends GetView<DashboardController> {
         centerTitle: true,
         title: const Text(
           'Dashboard',
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            letterSpacing: 0.5,
-          ),
+          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold, letterSpacing: 0.5),
         ),
         leading: Builder(
           builder: (context) => IconButton(
@@ -46,30 +53,20 @@ class DashboardScreen extends GetView<DashboardController> {
                 children: [
                   const Text(
                     "Select Location",
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.darkBlue,
-                    ),
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.darkBlue),
                   ),
                   const SizedBox(height: 8),
                   Obx(() {
-                    final locationList = controller.locations
-                        .map((loc) => "${loc.locName ?? ''} (${loc.locCode ?? ''})")
-                        .toList();
-  
+                    final locationList = controller.locations.map((loc) => "${loc.locName ?? ''} (${loc.locCode ?? ''})").toList();
+
                     return CustomSearchDropdown(
                       isLoading: controller.isLoadingLocations.value,
                       items: locationList,
                       hintText: "Search & Select Location",
-                      selectedItem: controller.selectedLocation.value != null 
-                          ? "${controller.selectedLocation.value!.locName} (${controller.selectedLocation.value!.locCode})"
-                          : null,
+                      selectedItem: controller.selectedLocation.value != null ? "${controller.selectedLocation.value!.locName} (${controller.selectedLocation.value!.locCode})" : null,
                       onSelected: (String? value) {
                         if (value != null) {
-                          final selected = controller.locations.firstWhereOrNull(
-                            (loc) => "${loc.locName} (${loc.locCode})" == value,
-                          );
+                          final selected = controller.locations.firstWhereOrNull((loc) => "${loc.locName} (${loc.locCode})" == value);
                           if (selected != null) {
                             controller.onLocationChanged(selected);
                           }
@@ -82,73 +79,15 @@ class DashboardScreen extends GetView<DashboardController> {
             ),
             const SizedBox(height: 10),
             Expanded(
-              child: ListView(
+              child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                children: [
-                  _menuTile(
-                    icon: Icons.edit_document,
-                    title: 'Booking Screen',
-                    subtitle: 'Manage and create new bookings',
-                    color: AppColors.primaryBlue,
-                    onTap: () => controller.navigateToRoute(AppRoutes.booking),
-                  ),
-                  _menuTile(
-                    icon: Icons.local_shipping_rounded,
-                    title: 'Arrival',
-                    subtitle: 'Manage shipment arrivals',
-                    color: AppColors.secondaryGreen,
-                    onTap: () => controller.navigateToRoute(AppRoutes.arrival),
-                  ),
-                  _menuTile(
-                    icon: Icons.assignment_rounded,
-                    title: 'PRS',
-                    subtitle: 'Pickup Request System',
-                    color: AppColors.primaryBlue,
-                    onTap: () => controller.navigateToRoute(AppRoutes.prs),
-                  ),
-                  _menuTile(
-                    icon: Icons.assignment_turned_in_rounded,
-                    title: 'PRS Closure',
-                    subtitle: 'Complete pending pickup requests',
-                    color: AppColors.secondaryGreen,
-                    onTap: () => controller.navigateToRoute(AppRoutes.prsClosure),
-                  ),
-                  _menuTile(
-                    icon: Icons.local_shipping_rounded,
-                    title: 'DRS Generation',
-                    subtitle: 'Generate Delivery Run Sheets',
-                    color: AppColors.primaryBlue,
-                    onTap: () => controller.navigateToRoute(AppRoutes.drsGeneration),
-                  ),
-                  _menuTile(
-                    icon: Icons.done_all_rounded,
-                    title: 'DRS Closure',
-                    subtitle: 'Complete and close delivery run sheets',
-                    color: AppColors.secondaryGreen,
-                    onTap: () => controller.navigateToRoute(AppRoutes.drsClosure),
-                  ),
-                  _menuTile(
-                    icon: Icons.cloud_upload_rounded,
-                    title: 'POD Upload',
-                    subtitle: 'Search and upload proof of delivery',
-                    color: AppColors.primaryBlue,
-                    onTap: () => controller.navigateToRoute(AppRoutes.podUpload),
-                  ),
-                  _menuTile(
-                    icon: Icons.payments_rounded,
-                    title: 'Expense Entry',
-                    subtitle: 'Branch daily expense entry',
-                    color: AppColors.secondaryGreen,
-                    onTap: () => controller.navigateToRoute(AppRoutes.expense),
-                  ),
-                  _menuTile(
-                    icon: Icons.list_alt_rounded,
-                    title: 'Stock Update Arrival',
-                    subtitle: 'View arrival stock update list',
-                    color: AppColors.primaryBlue,
-                    onTap: () => controller.navigateToRoute(AppRoutes.manifest),
-                  ),
-                ],
+                itemCount: menuItems.length,
+                itemBuilder: (context, index) {
+                  final item = menuItems[index];
+                  final color = index % 2 == 0 ? AppColors.primaryBlue : AppColors.secondaryGreen;
+
+                  return _menuTile(icon: item['icon'], title: item['title'], subtitle: item['subtitle'], color: color, onTap: () => controller.navigateToRoute(item['route']));
+                },
               ),
             ),
           ],
@@ -157,13 +96,7 @@ class DashboardScreen extends GetView<DashboardController> {
     );
   }
 
-  Widget _menuTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
+  Widget _menuTile({required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
     return Container(
       margin: const EdgeInsets.only(bottom: 18),
       child: InkWell(
@@ -174,37 +107,20 @@ class DashboardScreen extends GetView<DashboardController> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(22),
             border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.04),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
-              ),
-            ],
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 12, offset: const Offset(0, 5))],
           ),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(22),
             child: Stack(
               children: [
-                Positioned(
-                  right: -15,
-                  top: -15,
-                  child: Icon(
-                    icon,
-                    size: 100,
-                    color: color.withValues(alpha: 0.03),
-                  ),
-                ),
+                Positioned(right: -15, top: -15, child: Icon(icon, size: 100, color: color.withValues(alpha: 0.03))),
                 Padding(
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: color,
-                          borderRadius: BorderRadius.circular(18),
-                        ),
+                        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(18)),
                         child: Icon(icon, color: Colors.white, size: 28),
                       ),
                       const SizedBox(width: 20),
@@ -214,37 +130,18 @@ class DashboardScreen extends GetView<DashboardController> {
                           children: [
                             Text(
                               title,
-                              style: const TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.bold,
-                                color: AppColors.darkBlue,
-                                letterSpacing: 0.3,
-                              ),
+                              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold, color: AppColors.darkBlue, letterSpacing: 0.3),
                             ),
                             const SizedBox(height: 4),
-                            Text(
-                              subtitle,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
-                                height: 1.3,
-                              ),
-                            ),
+                            Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.3)),
                           ],
                         ),
                       ),
                       // Arrow button
                       Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade50,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.chevron_right_rounded,
-                          color: color.withValues(alpha: 0.6),
-                          size: 20,
-                        ),
+                        decoration: BoxDecoration(color: Colors.grey.shade50, shape: BoxShape.circle),
+                        child: Icon(Icons.chevron_right_rounded, color: color.withValues(alpha: 0.6), size: 20),
                       ),
                     ],
                   ),

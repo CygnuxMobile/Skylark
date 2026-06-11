@@ -19,9 +19,12 @@ class PrsClosureController extends GetxController {
   final finalBalController = TextEditingController();
 
   var isLoading = false.obs;
+  var isLoadingVendors = false.obs;
   var selectedVendorType = ''.obs;
   final RxList<dynamic> prsList = <dynamic>[].obs;
+  final RxList<dynamic> vendorList = <dynamic>[].obs;
   var selectedPrs = Rxn<Map<String, dynamic>>();
+  var selectedVendor = Rxn<dynamic>();
 
   // Filter variables
   var fromDate = Rxn<DateTime>();
@@ -39,6 +42,37 @@ class PrsClosureController extends GetxController {
     freightAmtController.addListener(_calculateFinalBalance);
     otherAmtController.addListener(_calculateFinalBalance);
     fetchPrsList();
+    fetchVendors();
+  }
+
+  Future<void> fetchVendors() async {
+    try {
+      isLoadingVendors.value = true;
+      final location = _storageService.getLocation();
+      final user = _storageService.getUser();
+
+      final body = {
+        "vendor_Type": "XX",
+        "location": location?.locCode ?? "",
+        "username": user?.userId ?? "",
+        "documentType": "PRS"
+      };
+
+      final response = await _apiService.post(AppConstants.getVendorsUrl, data: body);
+
+      if (response.statusCode == 200 && response.data != null) {
+        if (response.data['data'] != null && response.data['data'] is Map) {
+          final dataMap = response.data['data'] as Map;
+          if (dataMap['venderscodes'] != null && dataMap['venderscodes'] is List) {
+            vendorList.assignAll(dataMap['venderscodes']);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error fetching Vendors: $e");
+    } finally {
+      isLoadingVendors.value = false;
+    }
   }
 
   Future<void> fetchPrsList() async {
@@ -93,6 +127,17 @@ class PrsClosureController extends GetxController {
     freightAmtController.text = '0';
     otherAmtController.text = '0';
     finalBalController.text = '0';
+    selectedVendor.value = null;
+
+    if (vendorList.isNotEmpty) {
+      final vendorCode = (prs['vendor_code'] ?? prs['vendor_Code'])?.toString();
+      if (vendorCode != null) {
+        selectedVendor.value = vendorList.firstWhere(
+          (v) => (v['vendor_code'] ?? v['vendor_Code'])?.toString() == vendorCode,
+          orElse: () => null,
+        );
+      }
+    }
     
     Get.toNamed(AppRoutes.prsClosureDetail);
   }
@@ -139,7 +184,7 @@ class PrsClosureController extends GetxController {
       final body = {
         "prs": {
           "prsNo": prsNoController.text,
-          "loading_VendorCode": prsData?['vendor_code'] ?? "",
+          "loading_VendorCode": selectedVendor.value?['vendor_code'] ?? selectedVendor.value?['vendor_Code'] ?? prsData?['vendor_code'] ?? prsData?['vendor_Code'] ?? "",
           "loading_VendorName": vendorNameController.text,
           "freigthamt": double.tryParse(freightAmtController.text) ?? 0,
           "otherant": double.tryParse(otherAmtController.text) ?? 0,

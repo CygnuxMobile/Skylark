@@ -9,8 +9,8 @@ import 'package:skylark/app/data/services/storage_service.dart';
 import 'package:skylark/app/routes/app_routes.dart';
 
 class LoginController extends GetxController {
-  final userIdController = TextEditingController(text: "cygnusteam");
-  final passwordController = TextEditingController(text: "Cygnus@123");
+  final userIdController = TextEditingController(text: "");
+  final passwordController = TextEditingController(text: "");
   final formKey = GlobalKey<FormState>();
 
   final ApiService _apiService = ApiService();

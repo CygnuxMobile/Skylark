@@ -34,8 +34,7 @@ class DrsController extends GetxController {
 
   final cnoteController = TextEditingController();
   final RxList<String> selectedCnotes = <String>[].obs;
-  final RxList<Map<String, dynamic>> selectedCnoteData =
-      <Map<String, dynamic>>[].obs;
+  final RxList<Map<String, dynamic>> selectedCnoteData = <Map<String, dynamic>>[].obs;
   var isValidatingCnote = false.obs;
   var isSubmitting = false.obs;
 
@@ -68,10 +67,7 @@ class DrsController extends GetxController {
       isLoadingLocations.value = true;
       final user = _storageService.getUser();
       final userId = user?.userId ?? "";
-      final response = await _apiService.get(
-        AppConstants.getLocationMasterDataUrl,
-        queryParameters: {'UserID': userId},
-      );
+      final response = await _apiService.get(AppConstants.getLocationMasterDataUrl, queryParameters: {'UserID': userId});
 
       if (response.statusCode == 200 && response.data != null) {
         List<dynamic> data = [];
@@ -81,9 +77,7 @@ class DrsController extends GetxController {
           data = response.data['data'];
         }
 
-        locations.assignAll(
-          data.map((e) => LocationModel.fromJson(e)).toList(),
-        );
+        locations.assignAll(data.map((e) => LocationModel.fromJson(e)).toList());
       }
     } catch (e) {
       debugPrint("Error fetching locations: $e");
@@ -116,8 +110,7 @@ class DrsController extends GetxController {
         getTripSheetNumbers(formattedValue);
       }
     } else {
-      isVehicleNoValid.value =
-          formattedValue.isEmpty || vehicleRegex.hasMatch(formattedValue);
+      isVehicleNoValid.value = formattedValue.isEmpty || vehicleRegex.hasMatch(formattedValue);
       if (vehicleRegex.hasMatch(formattedValue)) {
         getTripSheetNumbers(formattedValue);
       } else {
@@ -133,13 +126,7 @@ class DrsController extends GetxController {
       final location = _storageService.getLocation();
       final baseLocationCode = location?.locCode ?? "";
 
-      final response = await _apiService.get(
-        AppConstants.getVehicleNoUrl,
-        queryParameters: {
-          'baseLocationCode': baseLocationCode,
-          'VendorType': '05',
-        },
-      );
+      final response = await _apiService.get(AppConstants.getVehicleNoUrl, queryParameters: {'baseLocationCode': baseLocationCode, 'VendorType': '05'});
 
       if (response.statusCode == 200 && response.data != null) {
         List<dynamic> data = [];
@@ -164,10 +151,7 @@ class DrsController extends GetxController {
     try {
       isLoadingTripSheets.value = true;
       tripSheets.clear();
-      final response = await _apiService.get(
-        AppConstants.getTripsheetNoUrl,
-        queryParameters: {'vehno': vehNo},
-      );
+      final response = await _apiService.get(AppConstants.getTripsheetNoUrl, queryParameters: {'vehno': vehNo});
 
       if (response.statusCode == 200 && response.data != null) {
         List<dynamic> data = [];
@@ -178,9 +162,7 @@ class DrsController extends GetxController {
         }
 
         if (data.isNotEmpty) {
-          tripSheets.assignAll(
-            data.map((e) => e['tripNo'].toString()).toList(),
-          );
+          tripSheets.assignAll(data.map((e) => e['tripNo'].toString()).toList());
         }
       }
     } catch (e) {
@@ -195,13 +177,7 @@ class DrsController extends GetxController {
     if (cnote.isEmpty) return;
 
     if (selectedCnotes.contains(cnote)) {
-      Get.snackbar(
-        "Error",
-        "Cnote already added",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", "Cnote already added", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
@@ -231,10 +207,7 @@ class DrsController extends GetxController {
         "baseCompanyCode": user?.baseCompanyCode ?? "",
       };
 
-      final response = await _apiService.post(
-        AppConstants.getAvailableDocketUrl,
-        data: body,
-      );
+      final response = await _apiService.post(AppConstants.getAvailableDocketUrl, data: body);
 
       if (response.statusCode == 200 && response.data != null) {
         dynamic responseData = response.data['data'];
@@ -257,32 +230,14 @@ class DrsController extends GetxController {
           cnoteController.clear();
         } else {
           cnoteController.clear();
-          Get.snackbar(
-            "Invalid Cnote",
-            "This Cnote number is not available for DRS.",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.orange,
-            colorText: Colors.white,
-          );
+          Get.snackbar("Invalid Cnote", "This Cnote number is not available for DRS.", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.orange, colorText: Colors.white);
         }
       } else {
-        Get.snackbar(
-          "Error",
-          "Failed to validate Cnote",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.red,
-          colorText: Colors.white,
-        );
+        Get.snackbar("Error", "Failed to validate Cnote", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
       debugPrint("Error validating Cnote: $e");
-      Get.snackbar(
-        "Error",
-        "An error occurred while validating Cnote",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", "An error occurred while validating Cnote", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isValidatingCnote.value = false;
     }
@@ -301,33 +256,15 @@ class DrsController extends GetxController {
 
   Future<void> submit() async {
     if (!isVehicleNoValid.value) {
-      Get.snackbar(
-        "Error",
-        "Please enter a valid Indian vehicle number",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", "Please enter a valid Indian vehicle number", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
     if (vehicleNo.value == null || vehicleNo.value!.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Please select/enter Vehicle No",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", "Please select/enter Vehicle No", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
     if (selectedCnotes.isEmpty) {
-      Get.snackbar(
-        "Error",
-        "Please add at least one Cnote",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", "Please add at least one Cnote", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
@@ -353,6 +290,7 @@ class DrsController extends GetxController {
         baseFinYear: user?.finYear ?? "",
         docType: "DRS",
         startKm: startKm.value.isEmpty ? "0" : startKm.value,
+        cdNo: "",
         prsGenerateList: selectedCnoteData
             .map(
               (e) => PrsGenerateList(
@@ -369,12 +307,8 @@ class DrsController extends GetxController {
                 trNMod: (e['trN_MOD'] ?? "").toString(),
                 dkttot: (e['dkttot'] ?? 0).toInt(),
                 desTCd: (e['desT_CD'] ?? "").toString(),
-                pdcdt: DateTime.tryParse(e['pdcdt']?.toString() ?? "") ??
-                    DateTime.now(),
-                bkgDate: DateTime.tryParse(
-                      (e['bkg_Date'] ?? e['dockdt'])?.toString() ?? "",
-                    ) ??
-                    DateTime.now(),
+                pdcdt: DateTime.tryParse(e['pdcdt']?.toString() ?? "") ?? DateTime.now(),
+                bkgDate: DateTime.tryParse((e['bkg_Date'] ?? e['dockdt'])?.toString() ?? "") ?? DateTime.now(),
                 rate: (e['rate'] ?? 0).toInt(),
                 ratetype: (e['ratetype'] ?? 0).toInt(),
               ),
@@ -382,34 +316,19 @@ class DrsController extends GetxController {
             .toList(),
       );
 
-      final response = await _apiService.post(
-        AppConstants.preparePrsUrl,
-        data: requestBody.toJson(),
-      );
+      final response = await _apiService.post(AppConstants.preparePrsUrl, data: requestBody.toJson());
 
       if (response.statusCode == 200 && response.data != null) {
         if (response.data['statusCode'] == 200) {
           final drsNo = response.data['data'];
           _showSuccessDialog(drsNo);
         } else {
-          Get.snackbar(
-            "Error",
-            response.data['message'] ?? "Submission failed",
-            snackPosition: SnackPosition.BOTTOM,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-          );
+          Get.snackbar("Error", response.data['message'] ?? "Submission failed", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
         }
       }
     } catch (e) {
       debugPrint("Error submitting DRS: $e");
-      Get.snackbar(
-        "Error",
-        "An error occurred during submission",
-        snackPosition: SnackPosition.BOTTOM,
-        backgroundColor: Colors.red,
-        colorText: Colors.white,
-      );
+      Get.snackbar("Error", "An error occurred during submission", snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isSubmitting.value = false;
     }
@@ -426,24 +345,13 @@ class DrsController extends GetxController {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.check_circle_outline_rounded,
-                  color: Colors.green,
-                  size: 60,
-                ),
+                decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+                child: const Icon(Icons.check_circle_outline_rounded, color: Colors.green, size: 60),
               ),
               const SizedBox(height: 20),
               const Text(
                 'Success!',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkBlue,
-                ),
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.darkBlue),
               ),
               const SizedBox(height: 12),
               const Text(
@@ -453,34 +361,22 @@ class DrsController extends GetxController {
               ),
               const SizedBox(height: 20),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
                   color: AppColors.primaryBlue.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: AppColors.primaryBlue.withOpacity(0.2),
-                  ),
+                  border: Border.all(color: AppColors.primaryBlue.withOpacity(0.2)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Text(
                       'No: ',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey,
-                      ),
+                      style: TextStyle(fontWeight: FontWeight.w500, color: Colors.grey),
                     ),
                     Text(
                       drsNo,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlue,
-                      ),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.primaryBlue),
                     ),
                   ],
                 ),
@@ -496,17 +392,11 @@ class DrsController extends GetxController {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primaryBlue,
                     padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   child: const Text(
                     'DONE',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                      color: Colors.white,
-                    ),
+                    style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1, color: Colors.white),
                   ),
                 ),
               ),

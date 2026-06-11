@@ -49,7 +49,9 @@ class BookingController extends GetxController {
   var customerErrorMessage = ''.obs;
 
   var locations = <PincodeModel>[].obs;
+  var fromLocations = <PincodeModel>[].obs;
   var isLoadingLocations = false.obs;
+  var isLoadingFromPincodes = false.obs;
   var selectedOrigin = Rxn<PincodeModel>();
   var selectedDest = Rxn<PincodeModel>();
   var selectedOriginDetails = Rxn<FromPincodeDetailsModel>();
@@ -95,6 +97,7 @@ class BookingController extends GetxController {
     });
 
     fetchCustomers();
+    fetchFromPincodes();
   }
 
   Future<void> fetchTransportModes(String custCode) async {
@@ -151,6 +154,39 @@ class BookingController extends GetxController {
       print('Error fetching pincodes: $e');
     } finally {
       isLoadingLocations.value = false;
+    }
+  }
+
+  Future<void> fetchFromPincodes() async {
+    try {
+      isLoadingFromPincodes.value = true;
+      final storageService = Get.find<StorageService>();
+      final location = storageService.getLocation();
+      final locCode = location?.locCode ?? '';
+
+      if (locCode.isEmpty) {
+        fromLocations.clear();
+        return;
+      }
+
+      final response = await _apiService.get(
+        AppConstants.getFromPincodeUrl,
+        queryParameters: {'ORGNCD': locCode},
+      );
+
+      if (response.statusCode == 200 && response.data != null) {
+        List<dynamic> data = [];
+        if (response.data is List) {
+          data = response.data;
+        } else if (response.data['data'] is List) {
+          data = response.data['data'];
+        }
+        fromLocations.assignAll(data.map((e) => PincodeModel.fromJson(e)).toList());
+      }
+    } catch (e) {
+      print('Error fetching from pincodes: $e');
+    } finally {
+      isLoadingFromPincodes.value = false;
     }
   }
 
@@ -313,10 +349,8 @@ class BookingController extends GetxController {
             originPinController.text = originPin;
             destPinController.text = destPin;
 
-            if (locations.isNotEmpty) {
-              selectedOrigin.value = locations.firstWhereOrNull((l) => l.pincode == originPin);
-              selectedDest.value = locations.firstWhereOrNull((l) => l.pincode == destPin);
-            }
+            onOriginSelected(fromLocations.firstWhereOrNull((l) => l.pincode == originPin) ?? PincodeModel(pincode: originPin));
+            onDestSelected(locations.firstWhereOrNull((l) => l.pincode == destPin) ?? PincodeModel(pincode: destPin));
 
             invNoController.text = details['invno']?.toString() ?? '';
             invValueController.text =
