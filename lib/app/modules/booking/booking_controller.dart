@@ -7,6 +7,8 @@ import 'package:skylark/app/data/models/customer_model.dart';
 import 'package:skylark/app/data/models/pincode_model.dart';
 import 'package:skylark/app/data/models/from_pincode_details_model.dart';
 import 'package:skylark/app/data/models/to_pincode_details_model.dart';
+import 'package:skylark/app/data/models/contract_freight_request_model.dart';
+import 'package:skylark/app/data/models/docket_submit_request_model.dart';
 import 'package:skylark/app/data/services/api_service.dart';
 import 'package:skylark/app/data/services/storage_service.dart';
 
@@ -38,6 +40,11 @@ class BookingController extends GetxController {
   final aWeightFocus = FocusNode();
   final invNoFocus = FocusNode();
   final invValueFocus = FocusNode();
+  final lengthFocus = FocusNode();
+  final breadthFocus = FocusNode();
+  final heightFocus = FocusNode();
+
+  var dimensionsList = <Map<String, double>>[].obs;
 
   final lengthController = TextEditingController();
   final breadthController = TextEditingController();
@@ -74,6 +81,7 @@ class BookingController extends GetxController {
   var showDimensions = false.obs;
   var freightData = <String, dynamic>{}.obs;
 
+  var isEwayBillRequired = false.obs;
   var isValidatingCnote = false.obs;
   var isCnoteValid = true.obs;
   var cnoteValidationMessage = "".obs;
@@ -85,6 +93,7 @@ class BookingController extends GetxController {
     cnoteController.addListener(_onCnoteChanged);
     originPinController.addListener(_onPinChanged);
     destPinController.addListener(_onPinChanged);
+    invValueController.addListener(_onInvValueChanged);
 
     ever(selectedCustomer, (value) {
       if (value != null) {
@@ -417,6 +426,11 @@ class BookingController extends GetxController {
     }
   }
 
+  void _onInvValueChanged() {
+    final val = double.tryParse(invValueController.text) ?? 0;
+    isEwayBillRequired.value = val > 50000;
+  }
+
   @override
   void onClose() {
     cnoteController.dispose();
@@ -444,6 +458,9 @@ class BookingController extends GetxController {
     aWeightFocus.dispose();
     invNoFocus.dispose();
     invValueFocus.dispose();
+    lengthFocus.dispose();
+    breadthFocus.dispose();
+    heightFocus.dispose();
     super.onClose();
   }
 
@@ -484,8 +501,6 @@ class BookingController extends GetxController {
         consigneeFocus.requestFocus();
       } else if (pkgsController.text.isEmpty) {
         pkgsFocus.requestFocus();
-      } else if (aWeightController.text.isEmpty) {
-        aWeightFocus.requestFocus();
       } else if (invNoController.text.isEmpty) {
         invNoFocus.requestFocus();
       } else if (invValueController.text.isEmpty) {
@@ -496,6 +511,22 @@ class BookingController extends GetxController {
 
   void toggleDimensions() {
     showDimensions.value = !showDimensions.value;
+  }
+
+  void addDimension(double l, double b, double h) {
+    dimensionsList.add({
+      "voL_L": l,
+      "voL_B": b,
+      "voL_H": h,
+    });
+    lengthController.clear();
+    breadthController.clear();
+    heightController.clear();
+    lengthFocus.requestFocus();
+  }
+
+  void removeDimension(int index) {
+    dimensionsList.removeAt(index);
   }
 
   void onOriginSelected(PincodeModel? value) {
@@ -621,31 +652,31 @@ class BookingController extends GetxController {
         return;
       }
 
-      final body = {
-        "Frompincode": selectedOrigin.value?.pincode ?? "",
-        "topincode": selectedDest.value?.pincode ?? "",
-        "ContractID": selectedCustomer.value?.contractId ?? "",
-        "FlagProceed": "P",
-        "Depth": "CLRMSP",
-        "PayBase": "P02",
-        "FromCity": origin.fromCity ?? "",
-        "Fromstate": origin.orgNstnm ?? "",
-        "Tostate": dest.desTstnm ?? "",
-        "ToCity": dest.toCity ?? "",
-        "OrgnLoc": origin.orgncd ?? "",
-        "DelLoc": dest.destcd ?? "",
-        "ServiceType": 1,
-        "FTLType": "",
-        "TransMode": selectedTransportMode.value?['codeId']?.toString() ?? dest.transType ?? "",
-        "ChargedWeight": aWeightController.text,
-        "NoOfPkgs": pkgsController.text,
-        "OrderID": selectedCustomer.value?.contractId ?? "",
-        "InvAmt": invValueController.text
-      };
+      final requestModel = ContractFreightRequestModel(
+        frompincode: selectedOrigin.value?.pincode ?? "",
+        topincode: selectedDest.value?.pincode ?? "",
+        contractId: selectedCustomer.value?.contractId ?? "",
+        flagProceed: "P",
+        depth: "CLRMSP",
+        payBase: "P02",
+        fromCity: origin.fromCity ?? "",
+        fromstate: origin.orgNstnm ?? "",
+        tostate: dest.desTstnm ?? "",
+        toCity: dest.toCity ?? "",
+        orgnLoc: origin.orgncd ?? "",
+        delLoc: dest.destcd ?? "",
+        serviceType: "1",
+        ftlType: "",
+        transMode: selectedTransportMode.value?['codeId']?.toString() ?? dest.transType ?? "",
+        chargedWeight: aWeightController.text,
+        noOfPkgs: pkgsController.text,
+        orderId: selectedCustomer.value?.contractId ?? "",
+        invAmt: invValueController.text,
+      );
 
       final response = await _apiService.post(
         AppConstants.getContractFreightUrl,
-        data: body,
+        data: requestModel.toJson(),
       );
 
       final responseData = response.data;
@@ -684,70 +715,99 @@ class BookingController extends GetxController {
       final origin = selectedOriginDetails.value;
       final dest = selectedDestDetails.value;
 
-      final Map<String, dynamic> docket = {
-        "dockno": cnoteController.text,
-        "dockdt": DateTime.now().toIso8601String(),
-        "manual_dockno": cnoteController.text,
-        "ewayBillNo": ewayBillController.text,
-        "partY_CODE": selectedCustomer.value?.custCode ?? "",
-        "frompincode": selectedOrigin.value?.pincode ?? "",
-        "topincode": selectedDest.value?.pincode ?? "",
-        "pkgsno": int.tryParse(pkgsController.text) ?? 0,
-        "actuwt": double.tryParse(aWeightController.text) ?? 0,
-        "reassigN_DESTCD": dest?.destcd ?? "",
-        "csgncd": selectedCustomer.value?.custCode ?? "",
-        "csgnnm": selectedCustomer.value?.custName ?? "",
-        "csgecd": selectedConsignee.value?.custCode ?? "",
-        "csgenm": selectedConsignee.value?.custName ?? "",
-        "fromCity": origin?.fromCity ?? "",
-        "orgncd": origin?.orgncd ?? "",
-        "orgNstnm": origin?.orgNstnm ?? "",
-        "orgnArea": origin?.orgnArea ?? "",
-        "toCity": dest?.toCity ?? "",
-        "destcd": dest?.destcd ?? "",
-        "desTstnm": dest?.desTstnm ?? "",
-        "destArea": dest?.destArea ?? "",
-        "pkp_dly": dest?.pkpDly ?? "",
-        "trans_type": selectedTransportMode.value?['codeId']?.toString() ?? dest?.transType ?? "",
-        "service_type": dest?.serviceType ?? "",
-        "pkgsty": dest?.pkgsty ?? "",
-        "businesstype": dest?.businesstype ?? "",
-        "contractID": selectedCustomer.value?.contractId ?? "",
-        "freightCharge": freightData['freightCharge'] ?? 0,
-        "freightRate": freightData['freightRate'] ?? 0,
-        "rateType": freightData['rateType'] ?? "",
-        "trDays": freightData['trDays'] ?? 0,
-        "invoiceRateApplay": "0",
-        "invoiceRate": 0,
-        "billingState": origin?.orgNstnm ?? "",
-        "serviceType": dest?.serviceType ?? "1",
-        "ftlType": dest?.businesstype ?? "1",
-        "transMode": selectedTransportMode.value?['codeId']?.toString() ?? dest?.transType ?? "5",
-        "chargedWeight": double.tryParse(aWeightController.text) ?? 0,
-        "noOfPkgs": int.tryParse(pkgsController.text) ?? 0,
-        "acT_WT": double.tryParse(aWeightController.text) ?? 0,
-        "orderID": selectedCustomer.value?.contractId ?? "",
-        "invAmt": double.tryParse(invValueController.text) ?? 0,
-        "invNo": invNoController.text,
-        "CompanyCode": user?.baseCompanyCode ?? ""
-      };
+      final docket = Docket(
+        dockno: cnoteController.text,
+        dockdt: DateTime.now().toIso8601String(),
+        manualDockno: cnoteController.text,
+        ewayBillNo: ewayBillController.text,
+        partYCODE: selectedCustomer.value?.custCode ?? "",
+        frompincode: selectedOrigin.value?.pincode ?? "",
+        topincode: selectedDest.value?.pincode ?? "",
+        pkgsno: int.tryParse(pkgsController.text) ?? 0,
+        actuwt: double.tryParse(aWeightController.text) ?? 0,
+        reassigNDESTCD: dest?.destcd ?? "",
+        csgncd: selectedCustomer.value?.custCode ?? "",
+        csgnnm: selectedCustomer.value?.custName ?? "",
+        csgecd: selectedConsignee.value?.custCode ?? "",
+        csgenm: selectedConsignee.value?.custName ?? "",
+        fromCity: origin?.fromCity ?? "",
+        orgncd: origin?.orgncd ?? "",
+        orgNstnm: origin?.orgNstnm ?? "",
+        orgnArea: origin?.orgnArea ?? "",
+        toCity: dest?.toCity ?? "",
+        destcd: dest?.destcd ?? "",
+        desTstnm: dest?.desTstnm ?? "",
+        destArea: dest?.destArea ?? "",
+        pkpDly: dest?.pkpDly ?? "",
+        transTypeUnderscore: selectedTransportMode.value?['codeId']?.toString() ?? dest?.transType ?? "",
+        serviceTypeUnderscore: dest?.serviceType ?? "",
+        pkgsty: dest?.pkgsty ?? "",
+        businesstype: dest?.businesstype ?? "",
+        contractID: selectedCustomer.value?.contractId ?? "",
+        freightCharge: freightData['freightCharge'] ?? 0,
+        freightRate: freightData['freightRate'] ?? 0,
+        rateType: freightData['rateType'] ?? "",
+        trDays: freightData['trDays'] ?? 0,
+        invoiceRateApplay: "0",
+        invoiceRate: 0,
+        billingState: origin?.orgNstnm ?? "",
+        serviceType: dest?.serviceType ?? "1",
+        ftlType: dest?.businesstype ?? "1",
+        transMode: selectedTransportMode.value?['codeId']?.toString() ?? dest?.transType ?? "5",
+        chargedWeight: double.tryParse(aWeightController.text) ?? 0,
+        noOfPkgs: int.tryParse(pkgsController.text) ?? 0,
+        acTWT: double.tryParse(aWeightController.text) ?? 0,
+        orderID: selectedCustomer.value?.contractId ?? "",
+        invAmt: double.tryParse(invValueController.text) ?? 0,
+        invNo: invNoController.text,
+        companyCode: user?.baseCompanyCode ?? "",
+      );
 
-      final List<Map<String, dynamic>> invoices = [
-        {
-          "voL_L": double.tryParse(lengthController.text) ?? 0,
-          "voL_B": double.tryParse(breadthController.text) ?? 0,
-          "voL_H": double.tryParse(heightController.text) ?? 0
+      final int totalPkgs = int.tryParse(pkgsController.text) ?? 0;
+      final double totalWeight = double.tryParse(aWeightController.text) ?? 0;
+      final double totalValue = double.tryParse(invValueController.text) ?? 0;
+      final String invNo = invNoController.text;
+
+      final List<Map<String, dynamic>> sourceList = dimensionsList.isEmpty
+          ? [
+              {
+                "voL_L": double.tryParse(lengthController.text) ?? 0,
+                "voL_B": double.tryParse(breadthController.text) ?? 0,
+                "voL_H": double.tryParse(heightController.text) ?? 0
+              }
+            ]
+          : dimensionsList;
+
+      final int count = sourceList.length;
+
+      final List<Invoices> invoices = sourceList.map((d) {
+        return Invoices(
+          invno: invNo,
+          pkgsno: (totalPkgs / count).floor(),
+          actuwt: totalWeight / count,
+          invamt: totalValue / count,
+          voLL: d["voL_L"],
+          voLB: d["voL_B"],
+          voLH: d["voL_H"],
+        );
+      }).toList();
+
+      if (invoices.isNotEmpty && totalPkgs > 0) {
+        int distributedPkgs = (totalPkgs / count).floor() * count;
+        int remainder = totalPkgs - distributedPkgs;
+        if (remainder > 0) {
+          invoices[0].pkgsno = (invoices[0].pkgsno ?? 0) + remainder;
         }
-      ];
+      }
 
-      final body = {
-        "docket": docket,
-        "invoices": invoices
-      };
+      final body = DocketSubmitRequestModel(
+        docket: docket,
+        invoices: invoices,
+      );
 
       final response = await _apiService.post(
         AppConstants.docketSubmitUrl,
-        data: body,
+        data: body.toJson(),
       );
 
       if (response.statusCode == 200 && response.data != null) {

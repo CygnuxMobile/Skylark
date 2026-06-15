@@ -5,7 +5,6 @@ import 'package:skylark/app/core/widgets/custom_button.dart';
 import 'package:skylark/app/core/widgets/custom_text_field.dart';
 import 'package:skylark/app/core/widgets/custom_search_dropdown.dart';
 import 'package:skylark/app/data/models/customer_model.dart';
-import 'package:skylark/app/data/models/location_model.dart';
 import 'package:skylark/app/data/models/pincode_model.dart';
 import 'booking_controller.dart';
 
@@ -73,12 +72,12 @@ class BookingScreen extends GetView<BookingController> {
                 ),
                 const SizedBox(height: 16),
 
-                _buildFieldLabel('Eway Bill'),
+                Obx(() => _buildFieldLabel('Eway Bill${controller.isEwayBillRequired.value ? ' *' : ''}')),
                 Obx(
                   () => CustomTextField(
                     controller: controller.ewayBillController,
                     focusNode: controller.ewayBillFocus,
-                    hintText: 'Enter Eway Bill Number',
+                    hintText: controller.isEwayBillRequired.value ? 'Enter Eway Bill Number *' : 'Enter Eway Bill Number',
                     keyboardType: TextInputType.number,
                     maxLength: 12,
                     prefixIcon: controller.isLoadingEwayBill.value
@@ -87,6 +86,16 @@ class BookingScreen extends GetView<BookingController> {
                             child: SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2)),
                           )
                         : const Icon(Icons.receipt_long_rounded, color: AppColors.primaryBlue, size: 20),
+                    validator: (value) {
+                      final invAmt = double.tryParse(controller.invValueController.text) ?? 0;
+                      if (invAmt > 50000 && (value == null || value.isEmpty)) {
+                        return 'Eway Bill is required for value > 50,000';
+                      }
+                      if (value != null && value.isNotEmpty && value.length != 12) {
+                        return 'Eway Bill must be 12 digits';
+                      }
+                      return null;
+                    },
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -264,7 +273,6 @@ class BookingScreen extends GetView<BookingController> {
                               hintText: '0.00',
                               readOnly: controller.isFieldsReadOnly.value,
                               keyboardType: TextInputType.number,
-                              validator: (value) => value == null || value.isEmpty ? 'Required' : null,
                             ),
                           ),
                         ],
@@ -371,23 +379,91 @@ class BookingScreen extends GetView<BookingController> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildFieldLabel('Dimensions (L x B x H)'),
+        Obx(() => ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: controller.dimensionsList.length,
+              itemBuilder: (context, index) {
+                final dim = controller.dimensionsList[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.primaryBlue.withOpacity(0.05),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.primaryBlue.withOpacity(0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      _buildDimLabelValue('L', dim['voL_L'].toString()),
+                      _buildDimLabelValue('B', dim['voL_B'].toString()),
+                      _buildDimLabelValue('H', dim['voL_H'].toString()),
+                      IconButton(
+                        onPressed: () => controller.removeDimension(index),
+                        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            )),
+        const SizedBox(height: 12),
+        _buildFieldLabel('Enter Dimensions (L x B x H)'),
         Row(
           children: [
-            _buildSmallDimField('L', controller.lengthController),
-            const SizedBox(width: 12),
-            _buildSmallDimField('B', controller.breadthController),
-            const SizedBox(width: 12),
-            _buildSmallDimField('H', controller.heightController),
+            _buildSmallDimField('L', controller.lengthController, controller.lengthFocus),
+            const SizedBox(width: 8),
+            _buildSmallDimField('B', controller.breadthController, controller.breadthFocus),
+            const SizedBox(width: 8),
+            _buildSmallDimField('H', controller.heightController, controller.heightFocus),
+            const SizedBox(width: 8),
+            InkWell(
+              onTap: () {
+                final l = double.tryParse(controller.lengthController.text) ?? 0;
+                final b = double.tryParse(controller.breadthController.text) ?? 0;
+                final h = double.tryParse(controller.heightController.text) ?? 0;
+                if (l > 0 && b > 0 && h > 0) {
+                  controller.addDimension(l, b, h);
+                } else {
+                  Get.snackbar('Error', 'Please enter valid dimensions', snackPosition: SnackPosition.BOTTOM, backgroundColor: Colors.orange, colorText: Colors.white);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBlue,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.add, color: Colors.white, size: 20),
+              ),
+            ),
           ],
         ),
       ],
     );
   }
 
-  Widget _buildSmallDimField(String label, TextEditingController textController) {
+  Widget _buildDimLabelValue(String label, String value) {
     return Expanded(
-      child: CustomTextField(controller: textController, hintText: label, keyboardType: TextInputType.number),
+      child: Row(
+        children: [
+          Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.darkBlue)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallDimField(String label, TextEditingController textController, FocusNode focusNode) {
+    return Expanded(
+      child: CustomTextField(
+        controller: textController,
+        focusNode: focusNode,
+        hintText: label,
+        keyboardType: TextInputType.number,
+      ),
     );
   }
 }
